@@ -1,6 +1,18 @@
 # Tooth-Final-Project
 Group2's final project repo
 
+## Possible folder structure
+```
+.
+├── data
+│   └── odontoai
+├── object_detection
+│   └── dino
+│       └── source codes (.py files)
+└── data_preprocess
+    └── main.py
+```
+
 ## How to run data preprocess
 1. Create a `data` folder and place `odontoai` into the folder
 ```
