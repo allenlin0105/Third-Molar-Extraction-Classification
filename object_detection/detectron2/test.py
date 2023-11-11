@@ -1,4 +1,5 @@
 import os, json
+import argparse
 import cv2
 import numpy as np
 from pathlib import Path
@@ -14,10 +15,14 @@ from utils import inital_setup, TRAIN, VAL, TEST
 dataset_folder = Path("../../data/odontoai-v2/")
 cfg = inital_setup(dataset_folder)
 cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "model_final.pth")  # path to the model we just trained
-cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5   # set a custom testing threshold
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.1   # set a custom testing threshold
 
 # Set up the split to be tested
-split = TEST
+parser = argparse.ArgumentParser()
+parser.add_argument("--split", type=str, required=True)
+args = parser.parse_args()
+
+split = args.split
 
 prediction_folder = Path("prediction", split)
 prediction_folder.mkdir(exist_ok=True, parents=True)
@@ -70,6 +75,4 @@ for image_path in tqdm(dataset_folder.joinpath(split, "images").iterdir(), "Pred
 
     with open(output_masks_folder.joinpath(image_path.stem + ".npy"), 'wb') as f:
         np.save(f, instances.pred_masks.numpy())
-    break
-
     
