@@ -1,6 +1,10 @@
 # dataset
 odontoai*
 
+# model
+**/detectron2/output/
+**/detectron2/prediction/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
