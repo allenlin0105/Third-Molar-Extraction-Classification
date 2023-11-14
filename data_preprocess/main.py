@@ -17,13 +17,20 @@ def copy_images(source_folder, target_folder, filenames=[]):
         shutil.copyfile(source_folder.joinpath(filename), target_folder.joinpath(filename))
 
 def main():
+    """
+    v2: remove duplicate-labeling 
+    v3: remove duplicate-labeling + no target teeth 
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_path", type=Path, default="data/odontoai")
+    parser.add_argument("--version", type=int, default=2)
     args = parser.parse_args()
 
+    dataset_path = args.dataset_path
+    version = args.version
     target_tooth_indices = [18, 28, 38, 48]
 
-    new_dataset_path = args.dataset_path.parents[0].joinpath("odontoai-v2")
+    new_dataset_path = dataset_path.parents[0].joinpath(f"odontoai-v{version}")
 
     splits = ["train", "val", "test"]
     for split in splits:
@@ -60,6 +67,13 @@ def main():
                 except KeyError:
                     continue
         
+            if version == 3:
+                appearance_count = 0
+                for appear in tooth_index2appear.values():
+                    appearance_count += int(appear)
+                if appearance_count == 0:
+                    valid = False
+
             if valid:
                 valid_image_ids.append(image_id)
             else:
