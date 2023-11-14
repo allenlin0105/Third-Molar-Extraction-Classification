@@ -62,7 +62,10 @@ def main():
         
             if valid:
                 valid_image_ids.append(image_id)
+            else:
+                print(f"Remove {coco.get_image_filename(image_id)} (image id: {image_id})")
         
+        print(f"Remaining {len(valid_image_ids) / len(image_ids) * 100:.2f}% {split} images ({len(valid_image_ids)} / {len(image_ids)})")
         copy_images(
             coco_images_folder, target_images_folder, 
             [coco.get_image_filename(image_id) for image_id in valid_image_ids]
@@ -81,8 +84,6 @@ def main():
 
             with open(new_dataset_path.joinpath(split, f"{split}.json"), "w") as outfile: 
                 json.dump(anno_dict, outfile)
-
-
 
 if __name__=="__main__":
     main()
