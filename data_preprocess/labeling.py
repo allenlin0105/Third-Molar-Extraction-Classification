@@ -59,7 +59,7 @@ def main():
     print(f"Total number of images to be labeled: {len(file_path_bboxes_list)}")
 
     # Sort by file names
-    file_path_bboxes_list.sort(key=lambda x: x[0])
+    file_path_bboxes_list.sort(key=lambda x: int(x[0].stem.split("-")[1]))
 
     n_group = 6
     for group_index in range(n_group):
