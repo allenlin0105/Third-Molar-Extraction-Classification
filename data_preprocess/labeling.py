@@ -3,6 +3,9 @@ import shutil
 import argparse
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+from PIL import Image
+from tqdm import trange
 from openpyxl import Workbook
 from openpyxl.worksheet.datavalidation import DataValidation
 
@@ -24,33 +27,39 @@ def main():
     dataset_path = args.dataset_path
     new_dataset_path = dataset_path.parents[0].joinpath("odontoai-labeling")
 
-    target_tooth_indices = [18, 28, 38, 48]
+    target_tooth_names = ["tooth-18", "tooth-28", "tooth-38", "tooth-48"]
 
     splits = ["train", "val"]
-    image_file_paths = []
-    target_tooth_existance = []
+    
+    """
+    A list of lists: (file_path, bboxes)
+    bboxes: a dict(category_name: bbox)
+    """
+    file_path_bboxes_list = []
     for split in splits:
         split_folder = dataset_path.joinpath(split)
         coco_annotations_file = split_folder.joinpath(f"{split}.json")
         coco = COCOParser(coco_annotations_file)
 
-        image_folder = split_folder.joinpath("images")
         image_ids = coco.get_image_ids()
         for image_id in image_ids:
             image_filename = coco.get_image_filename(image_id)
-            image_file_paths.append(image_folder.joinpath(image_filename))
-            target_tooth_existance.append({index: False for index in target_tooth_indices})
+            file_path_bboxes_list.append([
+                split_folder.joinpath("images", image_filename),
+                {}
+            ])
 
             anns = coco.get_anns(image_id)
             for ann in anns:
-                category_id = ann["category_id"]
-                category_name = coco.get_category_name(category_id)
-                tooth_index = int(category_name.split("-")[1])
-                if tooth_index not in target_tooth_existance[-1]:
+                category_name = coco.get_category_name(ann["category_id"])
+                if category_name not in target_tooth_names:
                     continue
-                target_tooth_existance[-1][tooth_index] = True
+                file_path_bboxes_list[-1][1][category_name] = ann
 
-    print(f"Total number of images to be labeled: {len(image_file_paths)}")
+    print(f"Total number of images to be labeled: {len(file_path_bboxes_list)}")
+
+    # Sort by file names
+    file_path_bboxes_list.sort(key=lambda x: x[0])
 
     n_group = 6
     for group_index in range(n_group):
@@ -60,77 +69,63 @@ def main():
         wb = Workbook()
         ws = wb.active
         
-        # Setting header row
-        row_chars = ["B", "C", "D", "E"]
-        ws["A1"] = "file_name"
-        for row_char, tooth_index in zip(row_chars, target_tooth_indices):
-            ws[f"{row_char}1"] = f"tooth-{tooth_index}"
+        # Set header row
+        ws["A1"] = "file"
+        ws["B1"] = "tooth"
+        ws["C1"] = "direction"
+        ws["D1"] = "method"
 
-        dv = DataValidation(type="list", formula1='"Class1,Class2,Class3"', allow_blank=True)
-        ws.add_data_validation(dv)
+        # Set dropdown list
+        direction_dv = DataValidation(type="list", formula1='"直,橫"', allow_blank=True)
+        method_dv = DataValidation(type="list", formula1='"複雜拔牙,單純齒切,複雜齒切"', allow_blank=True)
+        
+        ws.add_data_validation(direction_dv)
+        ws.add_data_validation(method_dv)
 
-        # n_images = math.ceil(len(image_file_paths) / n_group)
-        # dv.add(f"B2:E{n_images}")
+        excel_row_index = 2
+        for file_index in trange(group_index, len(file_path_bboxes_list), n_group, desc=f"Group {group_index}"):
+            # Common used
+            source_image_file_path = file_path_bboxes_list[file_index][0]
+            bboxes = file_path_bboxes_list[file_index][1]
 
-        # Write file names and X
-        for file_index in range(group_index, len(image_file_paths), n_group):
-            row_index = math.floor(file_index / n_group) + 2
-            ws[f"A{row_index}"] = image_file_paths[file_index].name
-            for tooth_index, existance in target_tooth_existance[file_index].items():
-                column_index = target_tooth_indices.index(tooth_index)
-                place = f"{row_chars[column_index]}{row_index}"
-                if existance:
-                    dv.add(ws[place])
-                else:
-                    ws[place] = "X"
+            # Excel
+            for target_tooth_name in target_tooth_names:
+                if target_tooth_name not in bboxes.keys():
+                    continue
 
-        # Save to file
+                ws[f"A{excel_row_index}"] = source_image_file_path.name
+                ws[f"B{excel_row_index}"] = int(target_tooth_name.split("-")[1])
+
+                excel_row_index += 1
+
+            # Image
+            target_image_file_path = group_folder.joinpath(source_image_file_path.name)
+
+            fig, ax = plt.subplots(figsize=(15,10))
+            for category_name, bbox in bboxes.items():
+                x, y, w, h = [int(b) for b in bbox["bbox"]]
+                rect = plt.Rectangle((x, y), w, h, linewidth=2, edgecolor="red", facecolor='none')
+                ax.add_patch(rect)
+
+                t_box = ax.text(x, y, category_name, color='black', fontsize=8)
+                t_box.set_bbox(dict(boxstyle='square, pad=0.05', facecolor='white', alpha=0.6))
+
+            image = Image.open(source_image_file_path)
+            ax.axis('off')
+            ax.imshow(image)
+            ax.set_xlabel('Longitude')
+
+            plt.tight_layout()
+            plt.savefig(target_image_file_path.__str__())
+            plt.clf()
+            plt.close()
+
+        # Add cell to dropdown list
+        direction_dv.add(f"C2:C{excel_row_index - 1}")
+        method_dv.add(f"D2:D{excel_row_index - 1}")
+
+        # Save excel file
         wb.save(group_folder.joinpath('label.xlsx'))
-
-        break
-        # valid_image_ids = []
-        # for image_id in tqdm(image_ids, desc="Examine"):
-        #     anns = coco.get_anns(image_id)
-
-        #     valid = True
-        #     tooth_index2appear = {index: False for index in target_tooth_indices} 
-        #     for ann in anns:
-        #         category_id = ann["category_id"]
-        #         category_name = coco.get_category_name(category_id)
-        #         tooth_index = int(category_name.split("-")[1])
-
-        #         try:
-        #             if tooth_index2appear[tooth_index]:
-        #                 valid = False
-        #                 break
-        #             tooth_index2appear[tooth_index] = True
-        #         except KeyError:
-        #             continue
-        
-        #     if valid:
-        #         valid_image_ids.append(image_id)
-        #     else:
-        #         print(f"Remove {coco.get_image_filename(image_id)} (image id: {image_id})")
-        
-        # print(f"Remaining {len(valid_image_ids) / len(image_ids) * 100:.2f}% {split} images ({len(valid_image_ids)} / {len(image_ids)})")
-        # copy_images(
-        #     coco_images_folder, target_images_folder, 
-        #     [coco.get_image_filename(image_id) for image_id in valid_image_ids]
-        # )
-
-        # with open(coco_annotations_file, "r") as fp:
-        #     anno_dict = json.load(fp)
-        #     anno_dict["images"] = [
-        #         image_dict for image_dict in anno_dict["images"] 
-        #         if image_dict["id"] in valid_image_ids
-        #     ]
-        #     anno_dict["annotations"] = [
-        #         ann for ann in anno_dict["annotations"]
-        #         if ann["image_id"] in valid_image_ids
-        #     ]
-
-        #     with open(new_dataset_path.joinpath(split, f"{split}.json"), "w") as outfile: 
-        #         json.dump(anno_dict, outfile)
 
 if __name__=="__main__":
     main()

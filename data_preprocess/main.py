@@ -40,6 +40,7 @@ def main():
         coco_images_folder = split_folder.joinpath("images")
         target_images_folder = new_dataset_path.joinpath(split, "images")
 
+        # Since test split does not have labels, just simply copy images
         if split == "test":
             copy_images(coco_images_folder, target_images_folder)
             continue
@@ -52,6 +53,7 @@ def main():
         for image_id in tqdm(image_ids, desc="Examine"):
             anns = coco.get_anns(image_id)
 
+            # Check if target tooth duplicate appear
             valid = True
             tooth_index2appear = {index: False for index in target_tooth_indices} 
             for ann in anns:
@@ -67,6 +69,7 @@ def main():
                 except KeyError:
                     continue
         
+            # Remove images without target teeth
             if version == 3:
                 appearance_count = 0
                 for appear in tooth_index2appear.values():
