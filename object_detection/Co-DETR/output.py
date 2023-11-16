@@ -21,14 +21,14 @@ model = init_detector(config_file, checkpoint_file, device='cuda:0')
 # valid
 # img_dir = ../../data/odontoai-v2/val/images/
 # test
-img_dir = '../../data/odontoai-v2/test/images/'
+img_dir = '../../data/odontoai-v3/test/images/'
 out_dir = 'path_to_exp/result_img/'
 
 # output_dict = dict()
 for filename in os.listdir(img_dir):
     if (filename == '.DS_Store'):
         continue
-    # print(filename)
+    print(filename)
 
     result = inference_detector(model, img_dir+filename)
     # result[label][bbox]

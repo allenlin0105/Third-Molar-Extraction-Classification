@@ -328,14 +328,22 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
         new_label = []
         new_bboxes = []
         new_segm_result = [] 
-        # select only "person" labels
         for idx, label in enumerate(labels):
-            # '0 is for "person" class'
             if label == 7 or label == 15 or label == 23 or label == 31:
                 new_label.append(label)
                 new_bboxes.append(bboxes[idx])
                 if segm_result is not None and len(labels) > 0:
                     new_segm_result.append(segms[idx])
+
+        # if no bboxes is left,
+        # choose a bbox which's score is lower than the threshold to add in.
+        if len(new_bboxes) == 0:
+            for idx, label in enumerate(labels):
+                if bboxes[idx][-1] < score_thr:
+                    new_label.append(label)
+                    new_bboxes.append(bboxes[idx])
+                    break
+        
         labels = np.array(new_label)
         bboxes = np.array(new_bboxes)
         if new_segm_result:
