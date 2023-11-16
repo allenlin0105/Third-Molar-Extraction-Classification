@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ```
 4. Run preprocessing
 ```
-python3 data_preprocess/main.py
+python3 data_preprocess/main.py --version 2
 ```
 
 The new dataset will be placed in the `data` folder, which is `odontoai-v2`
@@ -41,3 +41,7 @@ The new dataset will be placed in the `data` folder, which is `odontoai-v2`
 └── data_preprocess
     └── main.py
 ```
+
+### Provided versions
+- version 2: remove images with duplicate labels on tooth-18, 28, 38, 48
+- version 3: remove images which do not have tooth-18, 28, 38, 48
