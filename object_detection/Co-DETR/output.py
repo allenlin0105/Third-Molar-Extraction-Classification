@@ -1,12 +1,5 @@
-import json
-import torch
-import matplotlib.pyplot as plt
-import numpy as np
-from PIL import Image, ImageDraw
-import requests
 import os
-
-#coding=utf-8
+from tqdm import tqdm
  
 from mmdet.apis import init_detector
 from mmdet.apis import inference_detector
@@ -21,14 +14,14 @@ model = init_detector(config_file, checkpoint_file, device='cuda:0')
 # valid
 # img_dir = ../../data/odontoai-v2/val/images/
 # test
-img_dir = '../../data/odontoai-v3/test/images/'
+img_dir = '../../data/odontoai-v2/test/images/'
 out_dir = 'path_to_exp/result_img/'
 
 # output_dict = dict()
-for filename in os.listdir(img_dir):
+for filename in tqdm(os.listdir(img_dir)):
     if (filename == '.DS_Store'):
         continue
-    print(filename)
+    # print(filename)
 
     result = inference_detector(model, img_dir+filename)
     # result[label][bbox]
