@@ -1,1 +1,7 @@
 tqdm
+opencv-python
+gdown
+Pillow
+torch
+torchvision
+Lightning
