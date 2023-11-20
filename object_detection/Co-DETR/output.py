@@ -18,12 +18,12 @@ config_file = 'path_to_exp/checkpoints/co_deformable_detr_r50_1x_coco.py'
 checkpoint_file = 'best_bbox_mAP_epoch_12.pth'
 model = init_detector(config_file, checkpoint_file, device=args.device)
 
-
+split = "test"
 dataset_dir = "../../data/odontoai/"
-img_dir = dataset_dir + 'test/images/'
+img_dir = dataset_dir + f'{split}/images/'
 
 out_dir = 'path_to_exp/result_img/'
-out_file = "bbox.json"
+out_file = f"path_to_exp/{split}_bbox.json"
 output_dict = {
     "images": [],
     "annotations": [],
