@@ -1,9 +1,16 @@
+import csv
 import argparse
+from pathlib import Path
 
+import torch
 from torch.utils.data import DataLoader
 from lightning.pytorch import seed_everything, Trainer
 from lightning.pytorch import loggers as pl_loggers
 from lightning.pytorch.callbacks import ModelCheckpoint
+from PIL import Image, ImageDraw, ImageFont
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+from tqdm import tqdm
 
 from common.dataset import ImageDataset
 from common.base_model import BaseModel
@@ -18,11 +25,10 @@ def train(args):
 
     # checkpoint
     checkpoint_callback = ModelCheckpoint(
-        filename='{epoch:02d}-{val_acc:.5f}',
+        filename='best',
         monitor='val_acc',
         mode='max',
-        save_last=True,
-        save_top_k=3,
+        save_top_k=1,
     )
 
     # trainer
@@ -51,6 +57,71 @@ def train(args):
         )
     )
 
+def test(args):
+    # model
+    log_folder = Path(f"lightning_logs/version_{args.test_version}")
+    ckpt_file = log_folder.joinpath("checkpoints/best.ckpt")
+    model = BaseModel.load_from_checkpoint(ckpt_file)
+
+    # trainer
+    trainer = Trainer(accelerator='gpu', 
+                      devices=[args.cuda], 
+                      gradient_clip_val=0.5,
+                      logger=False,)
+    
+    # start testing
+    split = "test"
+    results = trainer.predict(
+        model,
+        DataLoader(
+            ImageDataset(args, split), 
+            batch_size=args.batch_size,
+            pin_memory=True,  
+        )
+    )
+
+    # save predicted result
+    output_folder = log_folder.joinpath("output")
+    output_folder.mkdir(exist_ok=True)
+
+    image_folder = output_folder.joinpath(f"{split}_images")
+    image_folder.mkdir(exist_ok=True)
+
+    fp = open(output_folder.joinpath(f"{split}_prediction.csv"), "w")
+    writer = csv.writer(fp)
+    writer.writerow(["file", "tooth", "method"])
+    
+    class_id2method = {
+        0: "複雜拔牙",
+        1: "單純齒切",
+        2: "複雜齒切",
+    }
+
+    for batch_result in tqdm(results, desc="Saving"):
+        probs, image_names = batch_result
+        for prob, image_name in zip(probs, image_names):
+            file = image_name.split("_")[1]
+            tooth_index = image_name.split("_")[0]
+            method = torch.argmax(prob).item()
+            writer.writerow([file, tooth_index, method])
+
+            image = Image.open(Path(args.dataset_folder).joinpath(split, "images", image_name))
+            text = f"Tooth {tooth_index}: {class_id2method[method]}"
+
+            draw = ImageDraw.Draw(image)
+            
+            font_size = 1
+            img_fraction = 0.50
+
+            font = ImageFont.truetype("../data/SimSun.ttf", font_size)
+            while font.getlength(text) < img_fraction * image.size[0]:
+                font_size += 1
+                font = ImageFont.truetype("../data/SimSun.ttf", font_size)
+            
+            draw.text((10, 10), text, font=font, fill=(255, 0, 0))
+            image.save(image_folder.joinpath(image_name))
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -67,6 +138,7 @@ def main():
 
     parser.add_argument("--do_train", action="store_true")
     parser.add_argument("--do_test",  action="store_true")
+    parser.add_argument("--test_version", type=int, default=0)
     
     args = parser.parse_args()
 
@@ -74,8 +146,8 @@ def main():
 
     if args.do_train:
         train(args)
-    # if args.do_test:
-    #     test(args)
+    if args.do_test:
+        test(args)
 
 if __name__=="__main__":
     main()

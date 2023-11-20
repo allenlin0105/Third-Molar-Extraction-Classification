@@ -15,12 +15,9 @@ class ImageDataset(Dataset):
         
         # Read images
         dataset_folder = Path(args.dataset_folder)
-        if split == "test":
-            image_folder = dataset_folder
-        else:
-            image_folder = dataset_folder.joinpath(split, "images")
+        image_folder = dataset_folder.joinpath(split, "images")
 
-        images = []
+        images, image_names = [], []
         image_name2index = {}
         transform = transforms.Compose([
             transforms.Resize((args.image_size, args.image_size)),
@@ -29,8 +26,10 @@ class ImageDataset(Dataset):
         for i, image_path in enumerate(image_folder.iterdir()):
             image = Image.open(image_path) 
             images.append(transform(image).unsqueeze(0))
+            image_names.append(image_path.name)
             image_name2index[image_path.name] = i
         self.images = torch.cat(images, dim=0)
+        self.image_names = image_names
 
         # Read labels
         if split == "test":
@@ -57,5 +56,5 @@ class ImageDataset(Dataset):
         if self.split == 'train' or self.split == "val":
             return self.images[idx], self.directions[idx], self.methods[idx]
         else:
-            return self.images[idx]
+            return self.images[idx], self.image_names[idx]
     

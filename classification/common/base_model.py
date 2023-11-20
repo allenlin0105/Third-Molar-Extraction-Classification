@@ -57,7 +57,8 @@ class BaseModel(pl.LightningModule):
         return loss
 
     def predict_step(self, batch):
-        return self(batch)
+        pred = self(batch)
+        return pred, batch[-1]
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(
