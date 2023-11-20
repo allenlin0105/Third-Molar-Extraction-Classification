@@ -70,7 +70,7 @@ def main():
 
             draw.rectangle(((x, y), (x + w, y + h)), outline="black", width=4)
 
-            font = ImageFont.truetype("../data/SimSun.ttf", 20)
+            font = ImageFont.truetype("SimSun.ttf", 20)
             draw.text((x, y - 25), text, font=font, fill=(255, 0, 0))
 
         image.save(output_folder.joinpath(image_name))

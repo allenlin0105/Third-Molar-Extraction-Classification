@@ -113,10 +113,10 @@ def test(args):
             font_size = 1
             img_fraction = 0.50
 
-            font = ImageFont.truetype("../data/SimSun.ttf", font_size)
+            font = ImageFont.truetype("SimSun.ttf", font_size)
             while font.getlength(text) < img_fraction * image.size[0]:
                 font_size += 1
-                font = ImageFont.truetype("../data/SimSun.ttf", font_size)
+                font = ImageFont.truetype("SimSun.ttf", font_size)
             
             draw.text((10, 10), text, font=font, fill=(255, 0, 0))
             image.save(image_folder.joinpath(image_name))
