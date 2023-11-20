@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import lightning.pytorch as pl
 
-from classification.models.CNN import CNN
+from models.CNN import CNN
 
 class BaseModel(pl.LightningModule):
     def __init__(self, args,):
@@ -21,12 +21,7 @@ class BaseModel(pl.LightningModule):
     """
     Custom functions
     """
-    def forward_step(self, batch):
-        images = batch[0]
-        pred = self.model(images)
-        return pred
-
-    def evaluate_step(self, split, batch, pred):
+    def evaluate(self, split, batch, pred):
         target = batch[2]  # methods
         loss = self.loss_func(pred, target)
         self.log(f"{split}_loss", loss)
@@ -39,13 +34,18 @@ class BaseModel(pl.LightningModule):
     """
     Hooks for lightning
     """
+    def forward(self, batch):
+        images = batch[0]
+        pred = self.model(images)
+        return pred
+
     def training_step(self, batch, batch_idx):
-        pred = self.forward(batch)
+        pred = self(batch)
         loss = self.evaluate("train", batch, pred)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        pred = self.forward(batch)
+        pred = self(batch)
         loss = self.evaluate("val", batch, pred)
         return loss
 
@@ -54,6 +54,7 @@ class BaseModel(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(
+            self.model.parameters(),
             lr=self.lr,
             weight_decay=self.weight_decay
         )

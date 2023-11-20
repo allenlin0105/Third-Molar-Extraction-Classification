@@ -3,9 +3,10 @@ import argparse
 from torch.utils.data import DataLoader
 from lightning.pytorch import seed_everything, Trainer
 from lightning.pytorch import loggers as pl_loggers
-from pytorch_lightning.callbacks import ModelCheckpoint
+from lightning.pytorch.callbacks import ModelCheckpoint
 
-from common import ImageDataset, BaseModel
+from common.dataset import ImageDataset
+from common.base_model import BaseModel
 
 
 def train(args):
@@ -17,16 +18,16 @@ def train(args):
 
     # checkpoint
     checkpoint_callback = ModelCheckpoint(
-        monitor='validation_loss',
-        filename='ckpt-{epoch:02d}-{validation_loss:.5f}',
+        filename='{epoch:02d}-{val_acc:.5f}',
+        monitor='val_acc',
+        mode='max',
         save_last=True,
         save_top_k=3,
-        mode='min',
     )
 
     # trainer
     trainer = Trainer(accelerator='gpu', 
-                      devices=[int(args.device.split(":")[-1])], 
+                      devices=[args.cuda], 
                       max_epochs=args.n_epoch, 
                       gradient_clip_val=0.5,
                       accumulate_grad_batches=args.accum_batch,
@@ -40,15 +41,13 @@ def train(args):
         DataLoader(
             ImageDataset(args, "train"), 
             batch_size=args.batch_size, 
-            shuffle=True, 
-            num_workers=8, 
+            shuffle=True,
             pin_memory=True,
         ),
         DataLoader(
             ImageDataset(args, "val"), 
-            batch_size=args.batch_size,  
-            num_workers=8, 
-            pin_memory=True,
+            batch_size=args.batch_size,
+            pin_memory=True,  
         )
     )
 
@@ -56,7 +55,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--dataset_folder", type=str, default="../data/odontoai-classification/")
-    parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--cuda", type=int, default=0)
 
     parser.add_argument("--image_size", type=int, default=64)
 
