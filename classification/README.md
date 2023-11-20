@@ -1,5 +1,11 @@
 # Classification pipeline
 
+## NOTICE
+To run the classification, `data/odontoai-classification` dataset should be created first.
+
+You can refer to the README at the root folder and see how to set up this dataset.
+
+
 ## How to run with sample model
 ```
 # Training process
