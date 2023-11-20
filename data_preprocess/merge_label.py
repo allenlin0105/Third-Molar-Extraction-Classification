@@ -30,9 +30,7 @@ def main():
                 if row[2] == "" or row[3] == "":
                     continue
 
-                image_name, ext = row[0].split(".")
-                tooth_index = row[1]
-                image_name = f"{image_name}_{tooth_index}.{ext}"
+                image_name = f"{row[1]}_{row[0]}"
                 label_dict[image_name] = {}
 
                 if row[2] == "直":
@@ -53,15 +51,14 @@ def main():
     
     split2writer = {}
     target_dataset_folder = Path("data/odontoai-classification")
-    target_dataset_folder.mkdir()
     for split in ["train", "val"]:
         split_folder = target_dataset_folder.joinpath(split)
         image_folder = split_folder.joinpath("images")
-        image_folder.mkdir(parents=True)
+        image_folder.mkdir(parents=True, exist_ok=True)
         split2writer[split] = csv.writer(open(split_folder.joinpath(f"{split}.csv"), "w"))
         split2writer[split].writerow(["file_name", "direction", "method"])
 
-    for image_name, label in label_dict:
+    for image_name, label in label_dict.items():
         split = image_name2split[image_name]
         # Image
         shutil.copyfile(

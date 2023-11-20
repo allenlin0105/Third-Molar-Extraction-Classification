@@ -41,7 +41,7 @@ Provided versions
 - version 3: remove images which do not have tooth-18, 28, 38, 48
 
 ### cropper.py
-Goal: Crop specific tooth images for classification
+Goal: Crop specific tooth to obtain training images for classification
 
 **NOTICE**: `data/odontoai-v3` should be created in advance
 ```
@@ -53,3 +53,14 @@ for split in "train" "val"; do
 done
 ```
 The new dataset will be placed at `data/odontoai-cropped`
+
+### merge_label.py
+Goal: Merge multiple annotated excels into one csv file
+
+**NOTICE**: `data/odontoai-cropped` should be created in advance
+```
+gdown https://drive.google.com/drive/folders/11xrCLz9uMcruRNbHDKVb1ZuEjPYsj3wU?usp=drive_link -O data/odontoai-annotated-csv --folder
+
+python3 data_preprocess/merge_label.py
+```
+The new dataset will be places at `data/odontoai-classification`
