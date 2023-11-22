@@ -8,8 +8,6 @@ from lightning.pytorch import seed_everything, Trainer
 from lightning.pytorch import loggers as pl_loggers
 from lightning.pytorch.callbacks import ModelCheckpoint
 from PIL import Image, ImageDraw, ImageFont
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
 from tqdm import tqdm
 
 from common.dataset import ImageDataset
@@ -24,9 +22,10 @@ def train(args):
     csv_logger = pl_loggers.CSVLogger(save_dir="./")
 
     # checkpoint
+    monitor_metrics = "val_auc"
     checkpoint_callback = ModelCheckpoint(
-        filename='best',
-        monitor='val_acc',
+        filename='{epoch:02d}-{val_acc:.4f}-{val_auc:.4f}',
+        monitor=monitor_metrics,
         mode='max',
         save_top_k=1,
     )
@@ -57,11 +56,15 @@ def train(args):
         )
     )
 
+    print("Best model path:", checkpoint_callback.best_model_path)
+    print(f"Best {monitor_metrics} score: {checkpoint_callback.best_model_score}")
+
+
 def test(args):
     # model
     log_folder = Path(f"lightning_logs/version_{args.test_version}")
-    ckpt_file = log_folder.joinpath("checkpoints/best.ckpt")
-    model = BaseModel.load_from_checkpoint(ckpt_file)
+    for ckpt_file in log_folder.joinpath("checkpoints").iterdir():
+        model = BaseModel.load_from_checkpoint(ckpt_file)
 
     # trainer
     trainer = Trainer(accelerator='gpu', 
