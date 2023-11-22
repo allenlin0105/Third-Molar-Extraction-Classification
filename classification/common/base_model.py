@@ -68,7 +68,7 @@ class BaseModel(pl.LightningModule):
         self.auc[index](pred, target)
         self.log(f"{split}_auc", self.auc[index], on_step=False, on_epoch=True)
         
-        self.per_class_auc[index].update(pred, target)
+        self.per_class_auc[index](pred, target)
         return loss
 
     """
