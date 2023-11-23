@@ -1,6 +1,12 @@
 import torch
 from torch import nn
 import lightning.pytorch as pl
+from torchmetrics.classification import (
+    MulticlassAccuracy, 
+    MulticlassPrecision,
+    MulticlassRecall,
+    MulticlassAUROC,
+)
 
 from models.CNN import CNN
 
@@ -13,6 +19,26 @@ class BaseModel(pl.LightningModule):
 
         self.save_hyperparameters()
 
+        self.splits = ["train", "val"]
+        self.acc = nn.ModuleList([
+            MulticlassAccuracy(num_classes=3, average="micro")
+        for _ in range(len(self.splits))])
+        self.per_class_acc = nn.ModuleList([
+            MulticlassAccuracy(num_classes=3, average=None)
+        for _ in range(len(self.splits))])
+        # self.precision = nn.ModuleList([
+        #     MulticlassPrecision(num_classes=3, average="micro")
+        # for _ in range(len(self.splits))])
+        # self.recall = nn.ModuleList([
+        #     MulticlassRecall(num_classes=3, average="micro")
+        # for _ in range(len(self.splits))])
+        self.auc = nn.ModuleList([
+            MulticlassAUROC(num_classes=3)
+        for _ in range(len(self.splits))])
+        self.per_class_auc = nn.ModuleList([
+            MulticlassAUROC(num_classes=3, average=None)
+        for _ in range(len(self.splits))])
+
         """
         You can change self.model here with your model
         """
@@ -24,11 +50,25 @@ class BaseModel(pl.LightningModule):
     def evaluate(self, split, batch, pred):
         target = batch[2]  # methods
         loss = self.loss_func(pred, target)
-        self.log(f"{split}_loss", loss)
+        self.log(f"{split}_loss", loss, on_step=False, on_epoch=True)
 
-        acc = torch.sum(torch.argmax(pred, dim=1) == target) / len(target)
-        self.log(f"{split}_acc", acc)
+        index = self.splits.index(split)
+        
+        self.acc[index](pred, target)
+        self.log(f"{split}_acc", self.acc[index], on_step=False, on_epoch=True)
 
+        self.per_class_acc[index](pred, target)
+
+        # self.precision[index](pred, target)
+        # self.log(f"{split}_precision", self.precision[index], on_step=False, on_epoch=True)
+
+        # self.recall[index](pred, target)
+        # self.log(f"{split}_recall", self.recall[index], on_step=False, on_epoch=True)
+
+        self.auc[index](pred, target)
+        self.log(f"{split}_auc", self.auc[index], on_step=False, on_epoch=True)
+        
+        self.per_class_auc[index](pred, target)
         return loss
 
     """
@@ -56,8 +96,21 @@ class BaseModel(pl.LightningModule):
         loss = self.evaluate("val", batch, pred)
         return loss
 
+    def on_train_epoch_end(self):
+        for i, split in enumerate(self.splits):
+            accs = self.per_class_acc[i].compute()
+            aucs = self.per_class_auc[i].compute()
+
+            for j in range(3):
+                self.log(f"class{j}_{split}_acc", accs[j], on_step=False, on_epoch=True)
+                self.log(f"class{j}_{split}_auc", aucs[j], on_step=False, on_epoch=True)
+            
+            self.per_class_acc[i].reset()
+            self.per_class_auc[i].reset()
+
     def predict_step(self, batch):
-        return self(batch)
+        pred = self(batch)
+        return pred, batch[-1]
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(

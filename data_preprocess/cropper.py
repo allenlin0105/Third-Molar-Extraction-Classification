@@ -24,6 +24,7 @@ def main():
     for image_id in tqdm(image_ids):
         filename = coco.get_image_filename(image_id)
         img = cv2.imread(str(args.source_image_folder.joinpath(filename)))
+        size = img.shape
 
         anns = coco.get_anns(image_id)
         for ann in anns:
@@ -33,8 +34,14 @@ def main():
             if tooth_index in target_tooth_indices:
                 # bbox format: [x, y, w, h]
                 bbox = [int(i) for i in ann["bbox"]]
-                # print(bbox)
-                crop_img = img[bbox[1]-100:bbox[1]+bbox[3]+100, bbox[0]-100:bbox[0]+bbox[2]+100]
+
+                # new coordinates (add min, max to prevent out of bound)
+                x1 = max(bbox[0] - 100, 0)
+                x2 = min(bbox[0] + bbox[2] + 100, size[1])
+                y1 = max(bbox[1] - 100, 0)
+                y2 = min(bbox[1] + bbox[3] + 100, size[0])
+
+                crop_img = img[y1:y2, x1:x2]
                 # print(crop_img.shape)
                 cv2.imwrite(
                     str(target_images_folder.joinpath(f"{tooth_index}_{filename}")),
