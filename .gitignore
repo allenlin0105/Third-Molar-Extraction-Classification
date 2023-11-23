@@ -5,6 +5,7 @@ odontoai*
 **/detectron2/output/
 **/detectron2/prediction/
 lightning_logs/
+mlruns/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

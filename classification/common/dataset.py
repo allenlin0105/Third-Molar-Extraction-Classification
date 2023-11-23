@@ -25,11 +25,18 @@ class ImageDataset(Dataset):
         ])
         for i, image_path in enumerate(image_folder.iterdir()):
             image = Image.open(image_path) 
-            images.append(transform(image).unsqueeze(0))
+            images.append(transforms.functional.adjust_contrast(
+                transform(image), contrast_factor=args.contrast
+            ).unsqueeze(0))
+            # images.append(transform(image_path).unsqueeze(0))
             image_names.append(image_path.name)
             image_name2index[image_path.name] = i
         self.images = torch.cat(images, dim=0)
         self.image_names = image_names
+
+        self.train_transform = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+        ])
 
         # Read labels
         if split == "test":
@@ -53,7 +60,9 @@ class ImageDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        if self.split == 'train' or self.split == "val":
+        if self.split == 'train':
+            return self.train_transform(self.images[idx]), self.directions[idx], self.methods[idx]
+        elif self.split == "val":
             return self.images[idx], self.directions[idx], self.methods[idx]
         else:
             return self.images[idx], self.image_names[idx]

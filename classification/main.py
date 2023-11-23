@@ -20,6 +20,7 @@ def train(args):
 
     # logger
     csv_logger = pl_loggers.CSVLogger(save_dir="./")
+    mlflow_logger = pl_loggers.MLFlowLogger(run_name=f"test-contrast={args.contrast}")
 
     # checkpoint
     monitor_metrics = "val_auc"
@@ -32,13 +33,13 @@ def train(args):
 
     # trainer
     trainer = Trainer(accelerator='gpu', 
-                      devices=[args.cuda], 
-                      max_epochs=args.n_epoch, 
-                      gradient_clip_val=0.5,
-                      accumulate_grad_batches=args.accum_batch,
-                      logger=csv_logger,
-                      log_every_n_steps=20,
-                      callbacks=[checkpoint_callback])
+                    devices=[args.cuda], 
+                    max_epochs=args.n_epoch, 
+                    gradient_clip_val=0.5,
+                    accumulate_grad_batches=args.accum_batch,
+                    logger=[csv_logger, mlflow_logger],
+                    log_every_n_steps=20,
+                    callbacks=[checkpoint_callback],)
     
     # start training
     trainer.fit(
@@ -132,6 +133,7 @@ def main():
     parser.add_argument("--cuda", type=int, default=0)
 
     parser.add_argument("--image_size", type=int, default=64)
+    parser.add_argument("--contrast", type=float, default=3.0)
 
     parser.add_argument("--n_epoch", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=16)
