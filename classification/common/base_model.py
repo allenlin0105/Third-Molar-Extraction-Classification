@@ -48,7 +48,7 @@ class BaseModel(pl.LightningModule):
     Custom functions
     """
     def evaluate(self, split, batch, pred):
-        target = batch[2]  # methods
+        target = batch[-1]  # methods
         loss = self.loss_func(pred, target)
         self.log(f"{split}_loss", loss, on_step=False, on_epoch=True)
 

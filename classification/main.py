@@ -20,7 +20,7 @@ def train(args):
 
     # logger
     csv_logger = pl_loggers.CSVLogger(save_dir="./")
-    mlflow_logger = pl_loggers.MLFlowLogger(run_name=f"test-contrast={args.contrast}")
+    mlflow_logger = pl_loggers.MLFlowLogger(run_name=f"test_smote-2500-5000-2500")
 
     # checkpoint
     monitor_metrics = "val_auc"
@@ -134,6 +134,7 @@ def main():
 
     parser.add_argument("--image_size", type=int, default=64)
     parser.add_argument("--contrast", type=float, default=3.0)
+    parser.add_argument("--increase_ratio", type=int, default=0)
 
     parser.add_argument("--n_epoch", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=16)
