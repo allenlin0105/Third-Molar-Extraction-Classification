@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch
 from torch import nn
 import lightning.pytorch as pl
@@ -5,10 +7,10 @@ from torchmetrics.classification import (
     MulticlassAccuracy, 
     MulticlassPrecision,
     MulticlassRecall,
-    MulticlassAUROC,
 )
 
 from models.CNN import CNN
+from common.utils import calculate_roc_auc, plot_roc_curve
 
 class BaseModel(pl.LightningModule):
     def __init__(self, args,):
@@ -19,25 +21,26 @@ class BaseModel(pl.LightningModule):
 
         self.save_hyperparameters()
 
+        """
+        Specify log metrics
+        """
         self.splits = ["train", "val"]
         self.acc = nn.ModuleList([
-            MulticlassAccuracy(num_classes=3, average="micro")
-        for _ in range(len(self.splits))])
+            MulticlassAccuracy(num_classes=3, average="micro") for _ in range(len(self.splits))
+        ])
         self.per_class_acc = nn.ModuleList([
-            MulticlassAccuracy(num_classes=3, average=None)
-        for _ in range(len(self.splits))])
-        # self.precision = nn.ModuleList([
-        #     MulticlassPrecision(num_classes=3, average="micro")
-        # for _ in range(len(self.splits))])
-        # self.recall = nn.ModuleList([
-        #     MulticlassRecall(num_classes=3, average="micro")
-        # for _ in range(len(self.splits))])
-        self.auc = nn.ModuleList([
-            MulticlassAUROC(num_classes=3)
-        for _ in range(len(self.splits))])
-        self.per_class_auc = nn.ModuleList([
-            MulticlassAUROC(num_classes=3, average=None)
-        for _ in range(len(self.splits))])
+            MulticlassAccuracy(num_classes=3, average=None) for _ in range(len(self.splits))
+        ])
+        self.precision = nn.ModuleList([
+            MulticlassPrecision(num_classes=3, average="micro") for _ in range(len(self.splits))
+        ])
+        self.recall = nn.ModuleList([
+            MulticlassRecall(num_classes=3, average="micro") for _ in range(len(self.splits))
+        ])
+
+        # For roc curve and auroc
+        self.preds = [[] for _ in range(len(self.splits))]
+        self.targets = [[] for _ in range(len(self.splits))]
 
         """
         You can change self.model here with your model
@@ -59,16 +62,15 @@ class BaseModel(pl.LightningModule):
 
         self.per_class_acc[index](pred, target)
 
-        # self.precision[index](pred, target)
-        # self.log(f"{split}_precision", self.precision[index], on_step=False, on_epoch=True)
+        self.precision[index](pred, target)
+        self.log(f"{split}_precision", self.precision[index], on_step=False, on_epoch=True)
 
-        # self.recall[index](pred, target)
-        # self.log(f"{split}_recall", self.recall[index], on_step=False, on_epoch=True)
+        self.recall[index](pred, target)
+        self.log(f"{split}_recall", self.recall[index], on_step=False, on_epoch=True)
 
-        self.auc[index](pred, target)
-        self.log(f"{split}_auc", self.auc[index], on_step=False, on_epoch=True)
-        
-        self.per_class_auc[index](pred, target)
+        self.preds[index].append(pred.cpu())
+        self.targets[index].append(target.cpu())
+
         return loss
 
     """
@@ -99,14 +101,20 @@ class BaseModel(pl.LightningModule):
     def on_train_epoch_end(self):
         for i, split in enumerate(self.splits):
             accs = self.per_class_acc[i].compute()
-            aucs = self.per_class_auc[i].compute()
+            fpr, tpr, roc_auc = calculate_roc_auc(self.preds[i], self.targets[i])
 
             for j in range(3):
-                self.log(f"class{j}_{split}_acc", accs[j], on_step=False, on_epoch=True)
-                self.log(f"class{j}_{split}_auc", aucs[j], on_step=False, on_epoch=True)
+                self.log(f"{split}_class{j}_acc", accs[j], on_step=False, on_epoch=True)
+                self.log(f"{split}_class{j}_auc", roc_auc[j], on_step=False, on_epoch=True)
+            self.log(f"{split}_auc", roc_auc["micro"], on_step=False, on_epoch=True)
             
+            metrics_dir = Path(self.logger.log_dir).joinpath("metrics")
+            metrics_dir.mkdir(exist_ok=True)
+            plot_roc_curve(fpr, tpr, roc_auc, metrics_dir.joinpath(f"epoch{self.current_epoch:02d}_{split}_roc.png"))
+
             self.per_class_acc[i].reset()
-            self.per_class_auc[i].reset()
+            self.preds[i] = []
+            self.targets[i] = []
 
     def predict_step(self, batch):
         pred = self(batch)

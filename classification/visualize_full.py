@@ -67,11 +67,14 @@ def main():
             text = f"Tooth {tooth_index}: {class_id2method[method]}"
 
             draw = ImageDraw.Draw(image)
+            draw.rectangle(((x, y), (x + w, y + h)), outline="red", width=5)
 
-            draw.rectangle(((x, y), (x + w, y + h)), outline="black", width=4)
-
-            font = ImageFont.truetype("SimSun.ttf", 20)
-            draw.text((x, y - 25), text, font=font, fill=(255, 0, 0))
+            font = ImageFont.truetype("SimSun.ttf", 30)
+            if tooth_index == "18" or tooth_index == "28":
+                y_value = y - 32
+            else:
+                y_value = y + h + 5
+            draw.text((x, y_value), text, font=font, fill=(255, 0, 0))
 
         image.save(output_folder.joinpath(image_name))
 

@@ -20,13 +20,18 @@ def train(args):
 
     # logger
     csv_logger = pl_loggers.CSVLogger(save_dir="./")
-    mlflow_logger = pl_loggers.MLFlowLogger(run_name=f"test_smote-2500-5000-2500")
+    mlflow_logger = pl_loggers.MLFlowLogger(run_name=f"test")
 
     # checkpoint
-    monitor_metrics = "val_auc"
-    checkpoint_callback = ModelCheckpoint(
-        filename='{epoch:02d}-{val_acc:.4f}-{val_auc:.4f}',
-        monitor=monitor_metrics,
+    acc_ckpt_callback = ModelCheckpoint(
+        filename='{epoch:02d}-{val_acc:.4f}',
+        monitor="val_acc",
+        mode='max',
+        save_top_k=1,
+    )
+    auc_ckpt_callback = ModelCheckpoint(
+        filename='{epoch:02d}-{val_auc:.4f}',
+        monitor="val_auc",
         mode='max',
         save_top_k=1,
     )
@@ -39,7 +44,7 @@ def train(args):
                     accumulate_grad_batches=args.accum_batch,
                     logger=[csv_logger, mlflow_logger],
                     log_every_n_steps=20,
-                    callbacks=[checkpoint_callback],)
+                    callbacks=[acc_ckpt_callback, auc_ckpt_callback],)
     
     # start training
     trainer.fit(
@@ -57,8 +62,8 @@ def train(args):
         )
     )
 
-    print("Best model path:", checkpoint_callback.best_model_path)
-    print(f"Best {monitor_metrics} score: {checkpoint_callback.best_model_score}")
+    print(f"Best acc score: {acc_ckpt_callback.best_model_score:.4f}")
+    print(f"Best auc score: {auc_ckpt_callback.best_model_score:.4f}")
 
 
 def test(args):
