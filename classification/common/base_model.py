@@ -10,6 +10,9 @@ from torchmetrics.classification import (
 )
 
 from models.CNN import CNN
+from models.ResNet import RESNET
+from models.VGG import VGG
+from models.ViT import ViT
 from common.utils import calculate_roc_auc, plot_roc_curve
 
 class BaseModel(pl.LightningModule):
@@ -45,7 +48,10 @@ class BaseModel(pl.LightningModule):
         """
         You can change self.model here with your model
         """
-        self.model = CNN(args.image_size)
+        # self.model = CNN(args.image_size)
+        self.model = RESNET()
+        # self.model = VGG()
+        # self.model = ViT()
     
     """
     Custom functions
