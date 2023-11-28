@@ -124,7 +124,7 @@ class BaseModel(pl.LightningModule):
 
     def predict_step(self, batch):
         pred = self(batch)
-        return pred, batch[-1]
+        return pred, batch[1]
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(

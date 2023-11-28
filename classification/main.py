@@ -70,7 +70,8 @@ def test(args):
     # model
     log_folder = Path(f"lightning_logs/version_{args.test_version}")
     for ckpt_file in log_folder.joinpath("checkpoints").iterdir():
-        model = BaseModel.load_from_checkpoint(ckpt_file)
+        if args.test_metric in ckpt_file.name:
+            model = BaseModel.load_from_checkpoint(ckpt_file)
 
     # trainer
     trainer = Trainer(accelerator='gpu', 
@@ -150,6 +151,7 @@ def main():
     parser.add_argument("--do_train", action="store_true")
     parser.add_argument("--do_test",  action="store_true")
     parser.add_argument("--test_version", type=int, default=0)
+    parser.add_argument("--test_metric", type=str, default="acc")
     
     args = parser.parse_args()
 

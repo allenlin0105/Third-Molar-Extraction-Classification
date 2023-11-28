@@ -91,7 +91,7 @@ class ImageDataset(Dataset):
         if self.split == 'train':
             return self.train_transform(self.images[idx]), self.methods[idx]
         elif self.split == "val":
-            return self.images[idx], self.methods[idx]
+            return self.images[idx], self.image_names[idx], self.methods[idx]
         else:
             return self.images[idx], self.image_names[idx]
     
