@@ -29,16 +29,16 @@ class BaseModel(pl.LightningModule):
         """
         self.splits = ["train", "val"]
         self.acc = nn.ModuleList([
-            MulticlassAccuracy(num_classes=3, average="micro") for _ in range(len(self.splits))
+            MulticlassAccuracy(num_classes=3) for _ in range(len(self.splits))
         ])
         self.per_class_acc = nn.ModuleList([
             MulticlassAccuracy(num_classes=3, average=None) for _ in range(len(self.splits))
         ])
         self.precision = nn.ModuleList([
-            MulticlassPrecision(num_classes=3, average="micro") for _ in range(len(self.splits))
+            MulticlassPrecision(num_classes=3) for _ in range(len(self.splits))
         ])
         self.recall = nn.ModuleList([
-            MulticlassRecall(num_classes=3, average="micro") for _ in range(len(self.splits))
+            MulticlassRecall(num_classes=3) for _ in range(len(self.splits))
         ])
 
         # For roc curve and auroc
@@ -118,7 +118,7 @@ class BaseModel(pl.LightningModule):
             for j in range(3):
                 self.log(f"{split}_class{j}_acc", accs[j], on_step=False, on_epoch=True)
                 self.log(f"{split}_class{j}_auc", roc_auc[j], on_step=False, on_epoch=True)
-            self.log(f"{split}_auc", roc_auc["micro"], on_step=False, on_epoch=True)
+            self.log(f"{split}_auc", roc_auc["macro"], on_step=False, on_epoch=True)
             
             metrics_dir = Path(self.logger.log_dir).joinpath("metrics")
             metrics_dir.mkdir(exist_ok=True)

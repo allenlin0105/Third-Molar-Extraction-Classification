@@ -38,21 +38,21 @@ def calculate_roc_auc(pred, target):
 def plot_roc_curve(fpr, tpr, roc_auc, image_path):
     fig, ax = plt.subplots(figsize=(12, 12))
 
-    plt.plot(
-        fpr["micro"],
-        tpr["micro"],
-        label=f"micro average (AUC={roc_auc['micro']:.4f})",
-        color="deeppink",
-        linewidth=2,
-    )
-
     # plt.plot(
-    #     fpr["macro"],
-    #     tpr["macro"],
-    #     label=f"macro average (AUC={roc_auc['macro']:.4f})",
-    #     color="navy",
+    #     fpr["micro"],
+    #     tpr["micro"],
+    #     label=f"micro average (AUC={roc_auc['micro']:.4f})",
+    #     color="deeppink",
     #     linewidth=2,
     # )
+
+    plt.plot(
+        fpr["macro"],
+        tpr["macro"],
+        label=f"macro average (AUC={roc_auc['macro']:.4f})",
+        color="navy",
+        linewidth=2,
+    )
 
     colors = ["aqua", "darkorange", "cornflowerblue"]
     for class_id, color in zip(range(3), colors):
