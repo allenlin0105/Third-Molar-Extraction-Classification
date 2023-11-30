@@ -48,10 +48,16 @@ class BaseModel(pl.LightningModule):
         """
         You can change self.model here with your model
         """
-        # self.model = CNN(args.image_size)
-        self.model = RESNET()
-        # self.model = VGG()
-        # self.model = ViT()
+        if args.model == "cnn":
+            self.model = CNN(args.image_size)
+        elif args.model == "resnet":
+            self.model = RESNET()
+        elif args.model == "vgg":
+            self.model = VGG()
+        elif args.model == "vit":
+            self.model = ViT()
+        else:
+            raise NotImplementedError(f"The model {args.model} is not implemented")
     
     """
     Custom functions

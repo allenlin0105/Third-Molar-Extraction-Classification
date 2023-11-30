@@ -44,7 +44,8 @@ def train(args):
                     accumulate_grad_batches=args.accum_batch,
                     logger=[csv_logger, mlflow_logger],
                     log_every_n_steps=20,
-                    callbacks=[acc_ckpt_callback, auc_ckpt_callback],)
+                    callbacks=[acc_ckpt_callback, auc_ckpt_callback],
+                    deterministic=True,)
     
     # start training
     trainer.fit(
@@ -75,9 +76,9 @@ def test(args):
 
     # trainer
     trainer = Trainer(accelerator='gpu', 
-                      devices=[args.cuda], 
-                      gradient_clip_val=0.5,
-                      logger=False,)
+                      devices=[args.cuda],
+                      logger=False,
+                      deterministic=True,)
     
     # start testing
     split = "test"
@@ -136,6 +137,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--dataset_folder", type=str, default="../data/odontoai-classification/")
+    parser.add_argument("--model", type=str, required=True)
     parser.add_argument("--cuda", type=int, default=0)
 
     parser.add_argument("--image_size", type=int, default=64)
