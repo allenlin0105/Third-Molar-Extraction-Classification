@@ -21,10 +21,10 @@ def main():
         anns_file = Path("../object_detection/Co-DETR/path_to_exp/test_bbox.json")
     else:
         anns_file = Path("../data/odontoai-v3", split, f"{split}.json")
-    ckpt_folder = Path("lightning_logs", f"version_{args.ckpt_version}")
-    prediction_file = ckpt_folder.joinpath("output", f"{split}_prediction.csv")
-    output_folder = ckpt_folder.joinpath("full_images", split)
-    output_folder.mkdir(parents=True, exist_ok=True)
+    base_folder = Path("lightning_logs", f"version_{args.ckpt_version}", "output")
+    prediction_file = base_folder.joinpath(f"{split}_prediction.csv")
+    output_folder = base_folder.joinpath(f"{split}_full_images")
+    output_folder.mkdir(exist_ok=True)
 
     file_name2tooth_index2method = {}
     with open(prediction_file, "r") as fp:
