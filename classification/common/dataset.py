@@ -6,7 +6,6 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 from imblearn.over_sampling import SMOTE
-from imblearn.under_sampling import RandomUnderSampler
 from imblearn.pipeline import Pipeline
 
 
@@ -63,26 +62,22 @@ class ImageDataset(Dataset):
 
         # Increase training data to prevent data imbalance
         if split == "train":
-            # for _ in range(args.increase_ratio):
-            #     for image, direction, method in zip(self.images, self.directions, self.methods):
-            #         if method.item() == 1:
-            #             self.images = torch.cat((self.images, image.unsqueeze(0)), dim=0)
-            #             self.methods = torch.cat((self.methods, method.unsqueeze(0)))
+            for _ in range(args.increase_ratio):
+                for image, direction, method in zip(self.images, self.directions, self.methods):
+                    if method.item() == 1:
+                        self.images = torch.cat((self.images, image.unsqueeze(0)), dim=0)
+                        self.methods = torch.cat((self.methods, method.unsqueeze(0)))
             
-            print("Running SMOTE...")
-            over = SMOTE(sampling_strategy={0: 2500, 1: 5000, 2: 2500})
-            # under = RandomUnderSampler(sampling_strategy=1.0)
-            steps = [
-                ('o', over), 
-                # ('u', under),
-            ]
-            pipeline = Pipeline(steps=steps)
+            # print("Running SMOTE...")
+            # over = SMOTE(sampling_strategy={0: 2500, 1: 2500, 2: 2500})
+            # steps = [('o', over)]
+            # pipeline = Pipeline(steps=steps)
 
-            n_sample, image_size = self.images.size(0), self.images.size(2)
-            sampled_images, sampled_methods = pipeline.fit_resample(self.images.view(n_sample, -1), self.methods)
-            self.images = torch.tensor(sampled_images).view(-1, 3, image_size, image_size)
-            self.methods = torch.tensor(sampled_methods)
-            print("Done")
+            # n_sample, image_size = self.images.size(0), self.images.size(2)
+            # sampled_images, sampled_methods = pipeline.fit_resample(self.images.view(n_sample, -1), self.methods)
+            # self.images = torch.tensor(sampled_images).view(-1, 3, image_size, image_size)
+            # self.methods = torch.tensor(sampled_methods)
+            # print("Done")
 
     def __len__(self):
         return len(self.images)
