@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request
 import os
+import argparse
 import pandas as pd
 
 app = Flask(__name__)
 
-csv_file_path = './Tooth-Final-Project/web_demo/test_prediction.csv' # output.csv是sort過的csv
+csv_file_path = os.path.join('static', 'test_prediction.csv') # output.csv是sort過的csv
 img = os.path.join('static', 'test_full_images')
 
 # 全域變數
@@ -107,10 +108,14 @@ def show():
     template_data[f'check_48'] = check_48
 
     # 輸出結果
-    df.to_csv('./Tooth-Final-Project/web_demo/result.csv', index=False)
+    df.to_csv('./static/result.csv', index=False)
 
     return render_template('index.html', **template_data)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", type=int, default=5000, help="the website's local port")
+    args = parser.parse_args()
+
+    app.run(host='0.0.0.0', port=args.port)

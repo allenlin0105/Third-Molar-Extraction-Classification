@@ -6,6 +6,9 @@ odontoai*
 **/detectron2/prediction/
 lightning_logs/
 
+# demo
+web_demo/static
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
