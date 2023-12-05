@@ -23,19 +23,20 @@
         }
         right_part{
             padding-left: 10px;
-            padding-top: 53px;
+            padding-top: 10px;
             float: left;
-            width: 100px;
+            width: 120px;
             font-size: 20px;
             line-height: 2.4;
         }
         .button-container form{
             display: flex;
-            padding-bottom: 20px;
+            padding-top: 10px;
+            padding-bottom: 50px;
         }
         .button-container input[type=submit]{
             width: 100px;
-            height: 30px;
+            height: 32px;
             font-size: 20px;
             margin-right: 10pt;
         }
@@ -48,6 +49,11 @@
         }
         p{
             padding-left: 30px;
+        }
+        red_p{
+            padding-left: 30px;
+            font-size: 15px;
+            color: red;
         }
         html {
             background-color: #c5dde0;
@@ -76,16 +82,28 @@
         <p>{{ place_type_1 }}</p>
         <p>{{ place_type_2 }}</p>
         <p>{{ place_type_3 }}</p>
+        {% if red_check %}
+            <red_p>這張已經登記過了唷</red_p>
+        {% endif %}
     </mid_part>
 
     <right_part>
         <form action="/" method="POST">
-            Check 18<input type="checkbox" value='0' name="check">
-            Check 28<input type="checkbox" value='1' name="check">
-            Check 38<input type="checkbox" value='2' name="check">
-            Check 48<input type="checkbox" value='3' name="check">
+            All wrong<input type="checkbox" value='X' name="check">
+            {% if check_18 %}
+                Check 18<input type="checkbox" value='18' name="check">
+            {% endif %}
+            {% if check_28 %}
+                Check 28<input type="checkbox" value='28' name="check">
+            {% endif %}
+            {% if check_38 %}
+                Check 38<input type="checkbox" value='38' name="check">
+            {% endif %}
+            {% if check_48 %}
+                Check 48<input type="checkbox" value='48' name="check">
+            {% endif %}
             <div class="button-container">
-                <input type="submit" value="save">
+                <input type="submit" name="save">
             </div>
         </form>
     </right_part>

@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request
-import csv
 import os
 import pandas as pd
 
@@ -46,8 +45,16 @@ def show():
         # 處理醫師判斷的結果
         if 'check' in request.form:
             Answer = request.form.getlist('check') #所有 name='check'的checkbox
-            for i in range(4):
-                if str(i) in Answer: df.iloc[image_list[image]+i,3] =  True
+            #---------------------------------------------------------------------
+            # 有幾顆智齒 就只跑幾輪
+            if image == len(image_list)-1: #(-5) % 4 = (-2 × 4 + 3) % 4 = 3.
+                teeth_number = len(df) - image_list[image] #最後一顆牙 = len(df)-1
+            else:
+                teeth_number = image_list[image+1]-image_list[image]
+            #---------------------------------------------------------------------
+            for i in range(teeth_number):
+                temp = str(df.iloc[image_list[image]+i,1])
+                if temp in Answer: df.iloc[image_list[image]+i,3] =  True
                 else: df.iloc[image_list[image]+i,3] =  False #寫錯可以重填一次進去 洗掉原本資料
             print(Answer)
             # 預設切到下一張
@@ -64,17 +71,40 @@ def show():
         'image_variant' : str(image+1),
     }
 
+    # 確認是否檢查過
+    red_check = False
+    if df.iloc[image_list[image], 3] != None:
+        red_check = True
+    template_data[f'red_check'] = red_check
+
     # 有幾顆智齒 就只跑幾輪
     if image == len(image_list)-1: #(-5) % 4 = (-2 × 4 + 3) % 4 = 3.
         teeth_number = len(df) - image_list[image] #最後一顆牙 = len(df)-1
     else:
         teeth_number = image_list[image+1]-image_list[image]
 
+    teeth_place = []
     for i in range (teeth_number):
         template_data[f'place_type_{i}'] = str(df.iloc[image_list[image]+i, 1]) + ':' + trans_type(str(df.iloc[image_list[image]+i, 2]))
+        teeth_place.append(str(df.iloc[image_list[image]+i, 1]))
     
     for i in range (teeth_number, 4):
         template_data[f'place_type_{i}'] = ''
+
+    # 選擇是否顯示checkbox
+    check_18 = False
+    check_28 = False
+    check_38 = False
+    check_48 = False
+    for i in range(len(teeth_place)):
+        if teeth_place[i] == '18': check_18 = True
+        elif teeth_place[i] == '28': check_28 = True
+        elif teeth_place[i] == '38': check_38 = True
+        elif teeth_place[i] == '48': check_48 = True
+    template_data[f'check_18'] = check_18
+    template_data[f'check_28'] = check_28
+    template_data[f'check_38'] = check_38
+    template_data[f'check_48'] = check_48
 
     # 輸出結果
     df.to_csv('./Tooth-Final-Project/web_demo/result.csv', index=False)
