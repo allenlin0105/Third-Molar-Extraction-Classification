@@ -13,6 +13,9 @@ from models.CNN import CNN
 from models.ResNet import RESNET
 from models.VGG import VGG
 from models.ViT import ViT
+from models.GoogLeNet import GoogLeNet
+from models.DenseNet import DenseNet
+from models.AlexNet import AlexNet
 from common.utils import calculate_roc_auc, plot_roc_curve
 
 class BaseModel(pl.LightningModule):
@@ -56,6 +59,12 @@ class BaseModel(pl.LightningModule):
             self.model = VGG()
         elif args.model == "vit":
             self.model = ViT()
+        elif args.model == "googlenet":
+            self.model = GoogLeNet()
+        elif args.model == "densenet":
+            self.model = DenseNet()
+        elif args.model == "alexnet":
+            self.model = AlexNet()
         else:
             raise NotImplementedError(f"The model {args.model} is not implemented")
     
