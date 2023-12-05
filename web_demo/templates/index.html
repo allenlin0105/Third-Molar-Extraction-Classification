@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智齒拔牙類型Demo</title>
+    <style>
+        /* 使用 CSS 的 max-width 屬性來縮小圖片 */
+        img {
+            max-width: 100%; /* 設定圖片最大寬度為容器寬度的百分之百 */
+            height: auto; /* 保持原始圖片高寬比例 */
+        }
+        left_part{
+            padding-left: 30px;
+            float: left;
+            width: 750px;
+        }
+        mid_part {
+            padding-left: 10px;
+            float: left;
+            width: 180px;
+            font-size: 20px;
+        }
+        right_part{
+            padding-left: 10px;
+            padding-top: 10px;
+            float: left;
+            width: 120px;
+            font-size: 20px;
+            line-height: 2.4;
+        }
+        .button-container form{
+            display: flex;
+            padding-top: 10px;
+            padding-bottom: 50px;
+        }
+        .button-container input[type=submit]{
+            width: 100px;
+            height: 32px;
+            font-size: 20px;
+            margin-right: 10pt;
+        }
+        h1 {
+            font-size: 40px;
+            text-align: center;
+        }
+        h2{
+            padding-left: 30px;
+        }
+        p{
+            padding-left: 30px;
+        }
+        red_p{
+            padding-left: 30px;
+            font-size: 15px;
+            color: red;
+        }
+        html {
+            background-color: #c5dde0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>智齒拔牙類型Demo</h1>
+    <h2>Image # {{ image_variant }}</h2>
+    <p>檔案名稱: {{ file_name }}</p>
+
+    <left_part>
+        <img src="{{image}}" >
+        <div class="button-container">
+            <form action="" method="POST">
+                <input type=submit value='previous' name="previous">
+                <input type=submit value='next' name="next">
+            </form>
+        </div>
+    </left_part>
+
+    <mid_part>
+        <p>齒位 | 拔牙類型 </p>
+        <p>{{ place_type_0 }}</p>
+        <p>{{ place_type_1 }}</p>
+        <p>{{ place_type_2 }}</p>
+        <p>{{ place_type_3 }}</p>
+        {% if red_check %}
+            <red_p>這張已經登記過了唷</red_p>
+        {% endif %}
+    </mid_part>
+
+    <right_part>
+        <form action="/" method="POST">
+            All wrong<input type="checkbox" value='X' name="check">
+            {% if check_18 %}
+                Check 18<input type="checkbox" value='18' name="check">
+            {% endif %}
+            {% if check_28 %}
+                Check 28<input type="checkbox" value='28' name="check">
+            {% endif %}
+            {% if check_38 %}
+                Check 38<input type="checkbox" value='38' name="check">
+            {% endif %}
+            {% if check_48 %}
+                Check 48<input type="checkbox" value='48' name="check">
+            {% endif %}
+            <div class="button-container">
+                <input type="submit" name="save">
+            </div>
+        </form>
+    </right_part>
+
+</body>
+
+</html>
