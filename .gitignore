@@ -1,3 +1,5 @@
+allen_test/
+
 # dataset
 odontoai*
 
@@ -5,6 +7,7 @@ odontoai*
 **/detectron2/output/
 **/detectron2/prediction/
 lightning_logs/
+mlruns/
 
 # demo
 web_demo/static

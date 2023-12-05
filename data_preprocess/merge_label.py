@@ -18,8 +18,9 @@ def main():
         }
     }
     """
-    label_dict = {}
+    split2valid_total = {"train": [0, 0], "val": [0, 0]}
 
+    label_dict = {}
     label_folder = Path("data/odontoai-annotated-csv")
     for label_file in label_folder.iterdir():
         with open(label_file, "r") as fp:
@@ -27,12 +28,14 @@ def main():
             next(reader)
 
             for row in reader:
+                image_name = f"{row[1]}_{row[0]}"
+                split2valid_total[image_name2split[image_name]][1] += 1
+                
                 if row[2] == "" or row[3] == "":
                     continue
+                split2valid_total[image_name2split[image_name]][0] += 1
 
-                image_name = f"{row[1]}_{row[0]}"
                 label_dict[image_name] = {}
-
                 if row[2] == "直":
                     label_dict[image_name]["direction"] = 0
                 elif row[2] == "橫":
@@ -48,6 +51,7 @@ def main():
                     label_dict[image_name]["method"] = 2
                 else:
                     raise ValueError(f"method {row[3]} is not available")
+    print(split2valid_total)
     
     split2writer = {}
     target_dataset_folder = Path("data/odontoai-classification")

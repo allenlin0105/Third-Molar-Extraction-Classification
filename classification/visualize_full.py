@@ -21,10 +21,10 @@ def main():
         anns_file = Path("../object_detection/Co-DETR/path_to_exp/test_bbox.json")
     else:
         anns_file = Path("../data/odontoai-v3", split, f"{split}.json")
-    ckpt_folder = Path("lightning_logs", f"version_{args.ckpt_version}")
-    prediction_file = ckpt_folder.joinpath("output", f"{split}_prediction.csv")
-    output_folder = ckpt_folder.joinpath("full_images", split)
-    output_folder.mkdir(parents=True, exist_ok=True)
+    base_folder = Path("lightning_logs", f"version_{args.ckpt_version}", "output")
+    prediction_file = base_folder.joinpath(f"{split}_prediction.csv")
+    output_folder = base_folder.joinpath(f"{split}_full_images")
+    output_folder.mkdir(exist_ok=True)
 
     file_name2tooth_index2method = {}
     with open(prediction_file, "r") as fp:
@@ -67,11 +67,14 @@ def main():
             text = f"Tooth {tooth_index}: {class_id2method[method]}"
 
             draw = ImageDraw.Draw(image)
+            draw.rectangle(((x, y), (x + w, y + h)), outline="red", width=5)
 
-            draw.rectangle(((x, y), (x + w, y + h)), outline="black", width=4)
-
-            font = ImageFont.truetype("SimSun.ttf", 20)
-            draw.text((x, y - 25), text, font=font, fill=(255, 0, 0))
+            font = ImageFont.truetype("SimSun.ttf", 30)
+            if tooth_index == "18" or tooth_index == "28":
+                y_value = y - 32
+            else:
+                y_value = y + h + 5
+            draw.text((x, y_value), text, font=font, fill=(255, 0, 0))
 
         image.save(output_folder.joinpath(image_name))
 
