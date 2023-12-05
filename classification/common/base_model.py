@@ -16,6 +16,7 @@ from models.ViT import ViT
 from models.GoogLeNet import GoogLeNet
 from models.DenseNet import DenseNet
 from models.AlexNet import AlexNet
+from common.focal_loss import FocalLoss
 from common.utils import calculate_roc_auc, plot_roc_curve
 
 class BaseModel(pl.LightningModule):
@@ -24,6 +25,7 @@ class BaseModel(pl.LightningModule):
         self.lr = args.lr
         self.weight_decay = args.weight_decay
         self.loss_func = nn.CrossEntropyLoss()
+        # self.loss_func = FocalLoss(alpha=torch.tensor([.2, .6, .2]), gamma=2,)
 
         self.save_hyperparameters()
 
