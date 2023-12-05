@@ -14,6 +14,8 @@ python3 data_preprocess/cropper.py \
     --target_image_folder data/odontoai-cropped/test/images
 
 cd classification
-python3 main.py --do_test \
+python3 main.py --do_test --test_version 82 \
+    --cuda 6 \
+    --model resnet \
     --dataset_folder ../data/odontoai-cropped/ \
-    --test_version 0 
+    --contrast 2.5
