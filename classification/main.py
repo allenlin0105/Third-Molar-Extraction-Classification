@@ -35,6 +35,12 @@ def train(args):
         mode='max',
         save_top_k=1,
     )
+    pre_ckpt_callback = ModelCheckpoint(
+        filename='{epoch:02d}-{val_precision:.4f}',
+        monitor="val_precision",
+        mode='max',
+        save_top_k=1,
+    )
 
     # trainer
     trainer = Trainer(accelerator='gpu', 
@@ -44,7 +50,7 @@ def train(args):
                     accumulate_grad_batches=args.accum_batch,
                     logger=[csv_logger, mlflow_logger],
                     log_every_n_steps=20,
-                    callbacks=[acc_ckpt_callback, auc_ckpt_callback],
+                    callbacks=[acc_ckpt_callback, auc_ckpt_callback, pre_ckpt_callback],
                     deterministic=True,)
     
     # start training
@@ -65,6 +71,7 @@ def train(args):
 
     print(f"Best acc score: {acc_ckpt_callback.best_model_score:.4f}")
     print(f"Best auc score: {auc_ckpt_callback.best_model_score:.4f}")
+    print(f"Best precision score: {pre_ckpt_callback.best_model_score:.4f}")
 
 
 def test(args):
