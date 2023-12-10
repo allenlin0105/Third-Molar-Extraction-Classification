@@ -1,7 +1,8 @@
 import pandas as pd
+import os
 
-DR_csv_file_path = './Tooth-Final-Project/web_demo/val_gt.csv'
-Model_csv_file_path = './Tooth-Final-Project/web_demo/val_prediction.csv'
+DR_csv_file_path = os.path.join('static', 'val_gt.csv')
+Model_csv_file_path = os.path.join('static', 'val_prediction.csv')
 
 # sort
 df = pd.read_csv(DR_csv_file_path)
@@ -26,4 +27,4 @@ for row in range(len(Model_df)):
         break
 
 # save
-Model_df.to_csv('./Tooth-Final-Project/web_demo/val_prediction_final.csv', index=False)
+Model_df.to_csv('./val_prediction_final.csv', index=False)

@@ -1,17 +1,23 @@
 from flask import Flask, render_template, request
 import os
 import pandas as pd
+import argparse
 import subprocess
 
 # 先把兩個資料組合起來
-file_path = './Tooth-Final-Project/web_demo/pre-processing.py'
-subprocess.run(['python', file_path])
+file_path = './pre-processing.py'
+try:
+    subprocess.run(['python', file_path], check=True, capture_output=True)
+    print("Pre-processing script executed successfully.")
+except subprocess.CalledProcessError as e:
+    print("Error in pre-processing script:")
+    print(e.stderr.decode('utf-8'))
+    exit()  # 或者適當處理錯誤
 
 app = Flask(__name__)
 
 # 選取所需檔案
-# csv_file_path = 'C:/Users/chris/Desktop/tooth/output.csv' # output.csv是sort過的csv
-csv_file_path = './Tooth-Final-Project/web_demo/val_prediction_final.csv' # output.csv是sort過的csv
+csv_file_path = './val_prediction_final.csv' # sort過的csv
 img = os.path.join('static', 'val_full_images')
 
 # 全域變數
@@ -107,6 +113,7 @@ def show():
             template_data[f'red_check_{i}'] = True
         else:
             template_data[f'red_check_{i}'] = False
+
     for i in range (teeth_number, 4):
         template_data[f'place_type_{i}'] = ''
 
@@ -126,10 +133,14 @@ def show():
     template_data[f'check_48'] = check_48
 
     # 輸出結果
-    df.to_csv('./Tooth-Final-Project/web_demo/result.csv', index=False)
+    df.to_csv('./static/result.csv', index=False)
 
     return render_template('index.html', **template_data)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", type=int, default=5000, help="the website's local port")
+    args = parser.parse_args()
+
+    app.run(host='0.0.0.0', port=args.port)
