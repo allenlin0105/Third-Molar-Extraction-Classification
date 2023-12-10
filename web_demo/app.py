@@ -1,11 +1,18 @@
 from flask import Flask, render_template, request
 import os
 import pandas as pd
+import subprocess
+
+# 先把兩個資料組合起來
+file_path = './Tooth-Final-Project/web_demo/pre-processing.py'
+subprocess.run(['python', file_path])
 
 app = Flask(__name__)
 
-csv_file_path = './Tooth-Final-Project/web_demo/test_prediction.csv' # output.csv是sort過的csv
-img = os.path.join('static', 'test_full_images')
+# 選取所需檔案
+# csv_file_path = 'C:/Users/chris/Desktop/tooth/output.csv' # output.csv是sort過的csv
+csv_file_path = './Tooth-Final-Project/web_demo/val_prediction_final.csv' # output.csv是sort過的csv
+img = os.path.join('static', 'val_full_images')
 
 # 全域變數
 df = pd.read_csv(csv_file_path)
@@ -41,6 +48,12 @@ def show():
             image -= 1
         if (bt_n == 'next'):
             image += 1
+        
+        # button_clicked = request.form['button']
+        # if (button_clicked == 'previous'):
+        #     image -= 1
+        # if (button_clicked == 'next'):
+        #     image += 1
 
         # 處理醫師判斷的結果
         if 'check' in request.form:
@@ -54,8 +67,8 @@ def show():
             #---------------------------------------------------------------------
             for i in range(teeth_number):
                 temp = str(df.iloc[image_list[image]+i,1])
-                if temp in Answer: df.iloc[image_list[image]+i,3] =  True
-                else: df.iloc[image_list[image]+i,3] =  False #寫錯可以重填一次進去 洗掉原本資料
+                if temp in Answer: df.iloc[image_list[image]+i,4] =  True
+                else: df.iloc[image_list[image]+i,4] =  False #寫錯可以重填一次進去 洗掉原本資料
             print(Answer)
             # 預設切到下一張
             image += 1
@@ -73,7 +86,7 @@ def show():
 
     # 確認是否檢查過
     red_check = False
-    if df.iloc[image_list[image], 3] != None:
+    if df.iloc[image_list[image], 4] != None:
         red_check = True
     template_data[f'red_check'] = red_check
 
@@ -84,10 +97,16 @@ def show():
         teeth_number = image_list[image+1]-image_list[image]
 
     teeth_place = []
-    for i in range (teeth_number):
-        template_data[f'place_type_{i}'] = str(df.iloc[image_list[image]+i, 1]) + ':' + trans_type(str(df.iloc[image_list[image]+i, 2]))
-        teeth_place.append(str(df.iloc[image_list[image]+i, 1]))
     
+    for i in range (teeth_number):
+        template_data[f'place_{i}'] = str(df.iloc[image_list[image]+i, 1]) + ':' 
+        template_data[f'type_model_{i}'] = trans_type(str(df.iloc[image_list[image]+i, 2]))
+        template_data[f'type_DR_{i}'] = trans_type(str(df.iloc[image_list[image]+i, 3]))
+        teeth_place.append(str(df.iloc[image_list[image]+i, 1]))
+        if trans_type(str(df.iloc[image_list[image]+i, 2])) != trans_type(str(df.iloc[image_list[image]+i, 3])):
+            template_data[f'red_check_{i}'] = True
+        else:
+            template_data[f'red_check_{i}'] = False
     for i in range (teeth_number, 4):
         template_data[f'place_type_{i}'] = ''
 

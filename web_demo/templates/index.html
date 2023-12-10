@@ -11,21 +11,21 @@
             height: auto; /* 保持原始圖片高寬比例 */
         }
         left_part{
-            padding-left: 30px;
+            padding-left: 8%;
             float: left;
-            width: 750px;
+            width: 50%;
         }
         mid_part {
-            padding-left: 10px;
+            padding-left: 0px;
             float: left;
-            width: 180px;
+            width: 25%;
             font-size: 20px;
         }
         right_part{
-            padding-left: 10px;
-            padding-top: 10px;
+            padding-left: 0px;
+            padding-top: 5%;
             float: left;
-            width: 120px;
+            width: 17%;
             font-size: 20px;
             line-height: 2.4;
         }
@@ -40,18 +40,27 @@
             font-size: 20px;
             margin-right: 10pt;
         }
+        
         h1 {
             font-size: 40px;
             text-align: center;
         }
         h2{
-            padding-left: 30px;
+            padding-left: 8%;
+        }
+        .tenspaces {
+            padding-left: 25%;
         }
         p{
-            padding-left: 30px;
+            padding-left: 8%;
+        }
+        .diff{
+            padding-left: 8%;
+            display: block;
+            color: red;
         }
         red_p{
-            padding-left: 30px;
+            padding-left: 35%;
             font-size: 15px;
             color: red;
         }
@@ -77,11 +86,32 @@
     </left_part>
 
     <mid_part>
-        <p>齒位 | 拔牙類型 </p>
-        <p>{{ place_type_0 }}</p>
-        <p>{{ place_type_1 }}</p>
-        <p>{{ place_type_2 }}</p>
-        <p>{{ place_type_3 }}</p>
+        <p>齒位 : &emsp;&emsp;拔牙類型</p>
+        <p class="tenspaces">&nbsp;模型預測 | 醫院提交 </p>
+        {% if red_check_0 %}
+            <p class="diff">{{ place_0 }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ type_model_0 }}&nbsp;&nbsp;&nbsp;{{ type_DR_0 }}</p>
+        {% else %}
+            <p>{{ place_0 }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ type_model_0 }}&nbsp;&nbsp;&nbsp;{{ type_DR_0 }}</p>
+        {% endif %}
+
+        {% if red_check_1 %}
+            <p class="diff">{{ place_1 }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ type_model_1 }}&nbsp;&nbsp;&nbsp;{{ type_DR_1 }}</p>
+        {% else %}
+            <p>{{ place_1 }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ type_model_1 }}&nbsp;&nbsp;&nbsp;{{ type_DR_1 }}</p>
+        {% endif %}
+
+        {% if red_check_2 %}
+            <p class="diff">{{ place_2 }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ type_model_2 }}&nbsp;&nbsp;&nbsp;{{ type_DR_2 }}</p>
+        {% else %}
+            <p>{{ place_2 }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ type_model_2 }}&nbsp;&nbsp;&nbsp;{{ type_DR_2 }}</p>
+        {% endif %}
+
+        {% if red_check_3 %}
+            <p class="diff">{{ place_3 }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ type_model_3 }}&nbsp;&nbsp;&nbsp;{{ type_DR_3 }}</p>
+        {% else %}
+            <p>{{ place_3 }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ type_model_3 }}&nbsp;&nbsp;&nbsp;{{ type_DR_3 }}</p>
+        {% endif %}
+
         {% if red_check %}
             <red_p>這張已經登記過了唷</red_p>
         {% endif %}
@@ -89,18 +119,22 @@
 
     <right_part>
         <form action="/" method="POST">
-            All wrong<input type="checkbox" value='X' name="check">
+            All wrong<input type="checkbox" value='X' name="check"><br>
+            
             {% if check_18 %}
-                Check 18<input type="checkbox" value='18' name="check">
+                Check 18<input type="checkbox" value='18' name="check"><br>
             {% endif %}
+            
             {% if check_28 %}
-                Check 28<input type="checkbox" value='28' name="check">
+                Check 28<input type="checkbox" value='28' name="check"><br>
             {% endif %}
+            
             {% if check_38 %}
-                Check 38<input type="checkbox" value='38' name="check">
+                Check 38<input type="checkbox" value='38' name="check"><br>
             {% endif %}
+            
             {% if check_48 %}
-                Check 48<input type="checkbox" value='48' name="check">
+                Check 48<input type="checkbox" value='48' name="check"><br>
             {% endif %}
             <div class="button-container">
                 <input type="submit" name="save">

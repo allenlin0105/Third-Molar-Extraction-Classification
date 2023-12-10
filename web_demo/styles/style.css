@@ -1,9 +1,0 @@
-/* 使用 CSS 的 max-width 屬性來縮小圖片 */
-img {
-    max-width: 50%; /* 設定圖片最大寬度為容器寬度的百分之百 */
-    height: auto; /* 保持原始圖片高寬比例 */
-}
-h1 {
-font-size: 40px;
-text-align: center;
-}
