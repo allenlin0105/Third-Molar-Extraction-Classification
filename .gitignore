@@ -6,6 +6,8 @@ odontoai*
 # model
 **/detectron2/output/
 **/detectron2/prediction/
+**/Co-DETR/path_to_exp/*_result_img/**
+**/Co-DETR/path_to_exp/*_bbox.json
 lightning_logs/
 mlruns/
 
