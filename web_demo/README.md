@@ -8,7 +8,7 @@ pip install gdown Flask
 
 2. Download demo files
 ```
-gdown --folder --remaining-ok https://drive.google.com/drive/folders/18ES3jISuqGfL0LhuZpZGNTh1ZuisC9F5 -O ./static
+gdown --folder --remaining-ok https://drive.google.com/drive/folders/1EToI2PWMHeoPsTXRbnbq0Z77SdBawRH2 -O ./static
 ```
 
 3. Run `python3 app.py` and you can access the website with the url provided at the console. If the port 5000 is already used in your machine, you can use the following command to choose a custom port.

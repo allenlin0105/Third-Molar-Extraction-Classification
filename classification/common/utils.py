@@ -36,7 +36,7 @@ def calculate_roc_auc(pred, target):
 
 
 def plot_roc_curve(fpr, tpr, roc_auc, image_path):
-    fig, ax = plt.subplots(figsize=(12, 12))
+    fig, ax = plt.subplots(figsize=(6, 6))
 
     # plt.plot(
     #     fpr["micro"],
