@@ -11,9 +11,10 @@
             height: auto; /* 保持原始圖片高寬比例 */
         }
         left_part{
-            padding-left: 8%;
+            padding-left: 10%;
+            padding-top: 2%;
             float: left;
-            width: 50%;
+            width: 45%;
         }
         mid_part {
             padding-left: 0px;
@@ -23,9 +24,9 @@
         }
         right_part{
             padding-left: 0px;
-            padding-top: 5%;
+            padding-top: 9.5%;
             float: left;
-            width: 17%;
+            width: 15%;
             font-size: 20px;
             line-height: 2.4;
         }
@@ -40,22 +41,27 @@
             font-size: 20px;
             margin-right: 10pt;
         }
+        select{
+            margin-bottom: 10%;
+        }
         
         h1 {
             font-size: 40px;
             text-align: center;
         }
         h2{
-            padding-left: 8%;
+            padding-left: 10%;
         }
         .tenspaces {
             padding-left: 25%;
         }
         p{
-            padding-left: 8%;
+            padding-left: 10%;
+            line-height: 1.5;
         }
         .diff{
-            padding-left: 8%;
+            padding-left: 10%;
+            line-height: 1.5;
             display: block;
             color: red;
         }
@@ -87,7 +93,7 @@
 
     <mid_part>
         <p>齒位 : &emsp;&emsp;拔牙類型</p>
-        <p class="tenspaces">&nbsp;模型預測 | 醫院提交 </p>
+        <p class="tenspaces">&nbsp;&nbsp;模型預測 | 醫院提交 </p>
         {% if red_check_0 %}
             <p class="diff">{{ place_0 }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ type_model_0 }}&nbsp;&nbsp;&nbsp;{{ type_DR_0 }}</p>
         {% else %}
@@ -119,23 +125,46 @@
 
     <right_part>
         <form action="/" method="POST">
-            All wrong<input type="checkbox" value='X' name="check"><br>
-            
             {% if check_18 %}
-                Check 18<input type="checkbox" value='18' name="check"><br>
+                <select name="select_18" id ="">
+                    <option value="">模型預測正確</option>
+                    <option value="0">複雜拔牙</option>
+                    <option value="1">單純齒切</option>
+                    <option value="2">複雜齒切</option>
+                </select>
+                <br>
             {% endif %}
             
             {% if check_28 %}
-                Check 28<input type="checkbox" value='28' name="check"><br>
+                <select name="select_28" id ="">
+                    <option value="">模型預測正確</option>
+                    <option value="0">複雜拔牙</option>
+                    <option value="1">單純齒切</option>
+                    <option value="2">複雜齒切</option>
+                </select>
+                <br>
             {% endif %}
             
             {% if check_38 %}
-                Check 38<input type="checkbox" value='38' name="check"><br>
+                <select name="select_38" id ="">
+                    <option value="">模型預測正確</option>
+                    <option value="0">複雜拔牙</option>
+                    <option value="1">單純齒切</option>
+                    <option value="2">複雜齒切</option>
+                </select>
+                <br>
             {% endif %}
             
             {% if check_48 %}
-                Check 48<input type="checkbox" value='48' name="check"><br>
+                <select name="select_48" id ="">
+                    <option value="">模型預測正確</option>
+                    <option value="0">複雜拔牙</option>
+                    <option value="1">單純齒切</option>
+                    <option value="2">複雜齒切</option>
+                </select>
+                <br>
             {% endif %}
+
             <div class="button-container">
                 <input type="submit" name="save">
             </div>

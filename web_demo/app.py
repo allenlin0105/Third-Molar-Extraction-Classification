@@ -23,7 +23,8 @@ img = os.path.join('static', 'val_full_images')
 # 全域變數
 df = pd.read_csv(csv_file_path)
 df = df.sort_values(by=['file', 'tooth'])
-df['Check_data'] = None 
+df['Model_acc'] = None 
+df['Result'] = None
 image = 0
 
 @app.route('/', methods=['POST', 'GET'])
@@ -54,16 +55,15 @@ def show():
             image -= 1
         if (bt_n == 'next'):
             image += 1
-        
-        # button_clicked = request.form['button']
-        # if (button_clicked == 'previous'):
-        #     image -= 1
-        # if (button_clicked == 'next'):
-        #     image += 1
 
         # 處理醫師判斷的結果
-        if 'check' in request.form:
-            Answer = request.form.getlist('check') #所有 name='check'的checkbox
+        
+        if 'save' in request.form:
+            select_18 = request.form.get('select_18')
+            select_28 = request.form.get('select_28')
+            select_38 = request.form.get('select_38')
+            select_48 = request.form.get('select_48')
+            Answer = [select_18, select_28, select_38, select_48]
             #---------------------------------------------------------------------
             # 有幾顆智齒 就只跑幾輪
             if image == len(image_list)-1: #(-5) % 4 = (-2 × 4 + 3) % 4 = 3.
@@ -72,9 +72,17 @@ def show():
                 teeth_number = image_list[image+1]-image_list[image]
             #---------------------------------------------------------------------
             for i in range(teeth_number):
-                temp = str(df.iloc[image_list[image]+i,1])
-                if temp in Answer: df.iloc[image_list[image]+i,4] =  True
-                else: df.iloc[image_list[image]+i,4] =  False #寫錯可以重填一次進去 洗掉原本資料
+                temp = int(df.iloc[image_list[image]+i,1])/10 - 1
+                if Answer[int(temp)] == '': 
+                    df.iloc[image_list[image]+i,4] =  True
+                    df.iloc[image_list[image]+i,5] =  df.iloc[image_list[image]+i,2]
+                else: 
+                    print(Answer[int(temp)])
+                    if str(Answer[int(temp)]) == str(df.iloc[image_list[image]+i,2]):
+                        df.iloc[image_list[image]+i,4] =  True 
+                    else:
+                        df.iloc[image_list[image]+i,4] =  False #寫錯可以重填一次進去 洗掉原本資料
+                    df.iloc[image_list[image]+i,5] =  Answer[int(temp)]
             print(Answer)
             # 預設切到下一張
             image += 1
