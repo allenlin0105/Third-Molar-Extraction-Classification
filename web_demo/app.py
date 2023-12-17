@@ -2,16 +2,30 @@ from flask import Flask, render_template, request
 import os
 import argparse
 import pandas as pd
+import argparse
+import subprocess
+
+# 先把兩個資料組合起來
+file_path = './pre-processing.py'
+try:
+    subprocess.run(['python', file_path], check=True, capture_output=True)
+    print("Pre-processing script executed successfully.")
+except subprocess.CalledProcessError as e:
+    print("Error in pre-processing script:")
+    print(e.stderr.decode('utf-8'))
+    exit()  # 或者適當處理錯誤
 
 app = Flask(__name__)
 
-csv_file_path = os.path.join('static', 'test_prediction.csv') # output.csv是sort過的csv
-img = os.path.join('static', 'test_full_images')
+# 選取所需檔案
+csv_file_path = './val_prediction_final.csv' # sort過的csv
+img = os.path.join('static', 'val_full_images')
 
 # 全域變數
 df = pd.read_csv(csv_file_path)
 df = df.sort_values(by=['file', 'tooth'])
-df['Check_data'] = None 
+df['Model_acc'] = None 
+df['Result'] = None
 image = 0
 
 @app.route('/', methods=['POST', 'GET'])
@@ -44,8 +58,13 @@ def show():
             image += 1
 
         # 處理醫師判斷的結果
-        if 'check' in request.form:
-            Answer = request.form.getlist('check') #所有 name='check'的checkbox
+        
+        if 'save' in request.form:
+            select_18 = request.form.get('select_18')
+            select_28 = request.form.get('select_28')
+            select_38 = request.form.get('select_38')
+            select_48 = request.form.get('select_48')
+            Answer = [select_18, select_28, select_38, select_48]
             #---------------------------------------------------------------------
             # 有幾顆智齒 就只跑幾輪
             if image == len(image_list)-1: #(-5) % 4 = (-2 × 4 + 3) % 4 = 3.
@@ -54,9 +73,17 @@ def show():
                 teeth_number = image_list[image+1]-image_list[image]
             #---------------------------------------------------------------------
             for i in range(teeth_number):
-                temp = str(df.iloc[image_list[image]+i,1])
-                if temp in Answer: df.iloc[image_list[image]+i,3] =  True
-                else: df.iloc[image_list[image]+i,3] =  False #寫錯可以重填一次進去 洗掉原本資料
+                temp = int(df.iloc[image_list[image]+i,1])/10 - 1
+                if Answer[int(temp)] == '': 
+                    df.iloc[image_list[image]+i,4] =  True
+                    df.iloc[image_list[image]+i,5] =  df.iloc[image_list[image]+i,2]
+                else: 
+                    print(Answer[int(temp)])
+                    if str(Answer[int(temp)]) == str(df.iloc[image_list[image]+i,2]):
+                        df.iloc[image_list[image]+i,4] =  True 
+                    else:
+                        df.iloc[image_list[image]+i,4] =  False #寫錯可以重填一次進去 洗掉原本資料
+                    df.iloc[image_list[image]+i,5] =  Answer[int(temp)]
             print(Answer)
             # 預設切到下一張
             image += 1
@@ -74,7 +101,7 @@ def show():
 
     # 確認是否檢查過
     red_check = False
-    if df.iloc[image_list[image], 3] != None:
+    if df.iloc[image_list[image], 4] != None:
         red_check = True
     template_data[f'red_check'] = red_check
 
@@ -85,10 +112,17 @@ def show():
         teeth_number = image_list[image+1]-image_list[image]
 
     teeth_place = []
-    for i in range (teeth_number):
-        template_data[f'place_type_{i}'] = str(df.iloc[image_list[image]+i, 1]) + ':' + trans_type(str(df.iloc[image_list[image]+i, 2]))
-        teeth_place.append(str(df.iloc[image_list[image]+i, 1]))
     
+    for i in range (teeth_number):
+        template_data[f'place_{i}'] = str(df.iloc[image_list[image]+i, 1]) + ':' 
+        template_data[f'type_model_{i}'] = trans_type(str(df.iloc[image_list[image]+i, 2]))
+        template_data[f'type_DR_{i}'] = trans_type(str(df.iloc[image_list[image]+i, 3]))
+        teeth_place.append(str(df.iloc[image_list[image]+i, 1]))
+        if trans_type(str(df.iloc[image_list[image]+i, 2])) != trans_type(str(df.iloc[image_list[image]+i, 3])):
+            template_data[f'red_check_{i}'] = True
+        else:
+            template_data[f'red_check_{i}'] = False
+
     for i in range (teeth_number, 4):
         template_data[f'place_type_{i}'] = ''
 
