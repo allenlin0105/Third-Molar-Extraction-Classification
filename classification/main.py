@@ -20,25 +20,38 @@ def train(args):
 
     # logger
     csv_logger = pl_loggers.CSVLogger(save_dir="./")
+    mlflow_logger = pl_loggers.MLFlowLogger(run_name=f"test")
 
     # checkpoint
-    monitor_metrics = "val_auc"
-    checkpoint_callback = ModelCheckpoint(
-        filename='{epoch:02d}-{val_acc:.4f}-{val_auc:.4f}',
-        monitor=monitor_metrics,
+    acc_ckpt_callback = ModelCheckpoint(
+        filename='{epoch:02d}-{val_acc:.4f}',
+        monitor="val_acc",
+        mode='max',
+        save_top_k=1,
+    )
+    auc_ckpt_callback = ModelCheckpoint(
+        filename='{epoch:02d}-{val_auc:.4f}',
+        monitor="val_auc",
+        mode='max',
+        save_top_k=1,
+    )
+    pre_ckpt_callback = ModelCheckpoint(
+        filename='{epoch:02d}-{val_precision:.4f}',
+        monitor="val_precision",
         mode='max',
         save_top_k=1,
     )
 
     # trainer
     trainer = Trainer(accelerator='gpu', 
-                      devices=[args.cuda], 
-                      max_epochs=args.n_epoch, 
-                      gradient_clip_val=0.5,
-                      accumulate_grad_batches=args.accum_batch,
-                      logger=csv_logger,
-                      log_every_n_steps=20,
-                      callbacks=[checkpoint_callback])
+                    devices=[args.cuda], 
+                    max_epochs=args.n_epoch, 
+                    gradient_clip_val=0.5,
+                    accumulate_grad_batches=args.accum_batch,
+                    logger=[csv_logger, mlflow_logger],
+                    log_every_n_steps=20,
+                    callbacks=[acc_ckpt_callback, auc_ckpt_callback, pre_ckpt_callback],
+                    deterministic=True,)
     
     # start training
     trainer.fit(
@@ -56,21 +69,23 @@ def train(args):
         )
     )
 
-    print("Best model path:", checkpoint_callback.best_model_path)
-    print(f"Best {monitor_metrics} score: {checkpoint_callback.best_model_score}")
+    print(f"Best acc score: {acc_ckpt_callback.best_model_score:.4f}")
+    print(f"Best auc score: {auc_ckpt_callback.best_model_score:.4f}")
+    print(f"Best precision score: {pre_ckpt_callback.best_model_score:.4f}")
 
 
 def test(args):
     # model
     log_folder = Path(f"lightning_logs/version_{args.test_version}")
     for ckpt_file in log_folder.joinpath("checkpoints").iterdir():
-        model = BaseModel.load_from_checkpoint(ckpt_file)
+        if args.test_metric in ckpt_file.name:
+            model = BaseModel.load_from_checkpoint(ckpt_file)
 
     # trainer
     trainer = Trainer(accelerator='gpu', 
-                      devices=[args.cuda], 
-                      gradient_clip_val=0.5,
-                      logger=False,)
+                      devices=[args.cuda],
+                      logger=False,
+                      deterministic=True,)
     
     # start testing
     split = "test"
@@ -129,12 +144,15 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--dataset_folder", type=str, default="../data/odontoai-classification/")
+    parser.add_argument("--model", type=str, required=True)
     parser.add_argument("--cuda", type=int, default=0)
 
     parser.add_argument("--image_size", type=int, default=64)
+    parser.add_argument("--contrast", type=float, default=1.0)
+    parser.add_argument("--increase_ratio", type=int, default=0)
 
-    parser.add_argument("--n_epoch", type=int, default=10)
-    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--n_epoch", type=int, default=50)
+    parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--accum_batch", type=int, default=1)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
@@ -142,6 +160,7 @@ def main():
     parser.add_argument("--do_train", action="store_true")
     parser.add_argument("--do_test",  action="store_true")
     parser.add_argument("--test_version", type=int, default=0)
+    parser.add_argument("--test_metric", type=str, default="acc")
     
     args = parser.parse_args()
 

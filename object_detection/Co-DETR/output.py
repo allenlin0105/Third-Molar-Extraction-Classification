@@ -6,8 +6,9 @@ from tqdm import tqdm
  
 from mmdet.apis import init_detector
 from mmdet.apis import inference_detector
- 
+
 parser = argparse.ArgumentParser()
+parser.add_argument("--split", type=str, required=True)
 parser.add_argument("--device", type=str, default="cuda:0")
 parser.add_argument("--visualize", action="store_true")
 parser.add_argument("--save_bbox", action="store_true")
@@ -18,11 +19,11 @@ config_file = 'path_to_exp/checkpoints/co_deformable_detr_r50_1x_coco.py'
 checkpoint_file = 'best_bbox_mAP_epoch_12.pth'
 model = init_detector(config_file, checkpoint_file, device=args.device)
 
-split = "test"
-dataset_dir = "../../data/odontoai/"
+split = args.split
+dataset_dir = "../../data/odontoai-v2/"
 img_dir = dataset_dir + f'{split}/images/'
 
-out_dir = 'path_to_exp/result_img/'
+out_dir = f'path_to_exp/{split}_result_img/'
 out_file = f"path_to_exp/{split}_bbox.json"
 output_dict = {
     "images": [],

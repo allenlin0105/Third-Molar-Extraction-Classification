@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch
 from torch import nn
 import lightning.pytorch as pl
@@ -5,10 +7,17 @@ from torchmetrics.classification import (
     MulticlassAccuracy, 
     MulticlassPrecision,
     MulticlassRecall,
-    MulticlassAUROC,
 )
 
 from models.CNN import CNN
+from models.ResNet import RESNET
+from models.VGG import VGG
+from models.ViT import ViT
+from models.GoogLeNet import GoogLeNet
+from models.DenseNet import DenseNet
+from models.AlexNet import AlexNet
+from common.focal_loss import FocalLoss
+from common.utils import calculate_roc_auc, plot_roc_curve
 
 class BaseModel(pl.LightningModule):
     def __init__(self, args,):
@@ -16,39 +25,56 @@ class BaseModel(pl.LightningModule):
         self.lr = args.lr
         self.weight_decay = args.weight_decay
         self.loss_func = nn.CrossEntropyLoss()
+        # self.loss_func = FocalLoss(alpha=torch.tensor([.2, .6, .2]), gamma=2,)
 
         self.save_hyperparameters()
 
+        """
+        Specify log metrics
+        """
         self.splits = ["train", "val"]
         self.acc = nn.ModuleList([
-            MulticlassAccuracy(num_classes=3, average="micro")
-        for _ in range(len(self.splits))])
+            MulticlassAccuracy(num_classes=3) for _ in range(len(self.splits))
+        ])
         self.per_class_acc = nn.ModuleList([
-            MulticlassAccuracy(num_classes=3, average=None)
-        for _ in range(len(self.splits))])
-        # self.precision = nn.ModuleList([
-        #     MulticlassPrecision(num_classes=3, average="micro")
-        # for _ in range(len(self.splits))])
-        # self.recall = nn.ModuleList([
-        #     MulticlassRecall(num_classes=3, average="micro")
-        # for _ in range(len(self.splits))])
-        self.auc = nn.ModuleList([
-            MulticlassAUROC(num_classes=3)
-        for _ in range(len(self.splits))])
-        self.per_class_auc = nn.ModuleList([
-            MulticlassAUROC(num_classes=3, average=None)
-        for _ in range(len(self.splits))])
+            MulticlassAccuracy(num_classes=3, average=None) for _ in range(len(self.splits))
+        ])
+        self.precision = nn.ModuleList([
+            MulticlassPrecision(num_classes=3) for _ in range(len(self.splits))
+        ])
+        self.recall = nn.ModuleList([
+            MulticlassRecall(num_classes=3) for _ in range(len(self.splits))
+        ])
+
+        # For roc curve and auroc
+        self.preds = [[] for _ in range(len(self.splits))]
+        self.targets = [[] for _ in range(len(self.splits))]
 
         """
         You can change self.model here with your model
         """
-        self.model = CNN(args.image_size)
+        if args.model == "cnn":
+            self.model = CNN(args.image_size)
+        elif args.model == "resnet":
+            self.model = RESNET()
+        elif args.model == "vgg":
+            self.model = VGG()
+        elif args.model == "vit":
+            self.model = ViT()
+        elif args.model == "googlenet":
+            self.model = GoogLeNet()
+        elif args.model == "densenet":
+            self.model = DenseNet()
+        elif args.model == "alexnet":
+            self.model = AlexNet()
+        else:
+            raise NotImplementedError(f"The model {args.model} is not implemented")
     
     """
     Custom functions
     """
     def evaluate(self, split, batch, pred):
-        target = batch[2]  # methods
+        target = batch[-1]  # methods
         loss = self.loss_func(pred, target)
         self.log(f"{split}_loss", loss, on_step=False, on_epoch=True)
 
@@ -59,16 +85,15 @@ class BaseModel(pl.LightningModule):
 
         self.per_class_acc[index](pred, target)
 
-        # self.precision[index](pred, target)
-        # self.log(f"{split}_precision", self.precision[index], on_step=False, on_epoch=True)
+        self.precision[index](pred, target)
+        self.log(f"{split}_precision", self.precision[index], on_step=False, on_epoch=True)
 
-        # self.recall[index](pred, target)
-        # self.log(f"{split}_recall", self.recall[index], on_step=False, on_epoch=True)
+        self.recall[index](pred, target)
+        self.log(f"{split}_recall", self.recall[index], on_step=False, on_epoch=True)
 
-        self.auc[index](pred, target)
-        self.log(f"{split}_auc", self.auc[index], on_step=False, on_epoch=True)
-        
-        self.per_class_auc[index](pred, target)
+        self.preds[index].append(pred.cpu())
+        self.targets[index].append(target.cpu())
+
         return loss
 
     """
@@ -99,18 +124,24 @@ class BaseModel(pl.LightningModule):
     def on_train_epoch_end(self):
         for i, split in enumerate(self.splits):
             accs = self.per_class_acc[i].compute()
-            aucs = self.per_class_auc[i].compute()
+            fpr, tpr, roc_auc = calculate_roc_auc(self.preds[i], self.targets[i])
 
             for j in range(3):
-                self.log(f"class{j}_{split}_acc", accs[j], on_step=False, on_epoch=True)
-                self.log(f"class{j}_{split}_auc", aucs[j], on_step=False, on_epoch=True)
+                self.log(f"{split}_class{j}_acc", accs[j], on_step=False, on_epoch=True)
+                self.log(f"{split}_class{j}_auc", roc_auc[j], on_step=False, on_epoch=True)
+            self.log(f"{split}_auc", roc_auc["macro"], on_step=False, on_epoch=True)
             
+            metrics_dir = Path(self.logger.log_dir).joinpath("metrics")
+            metrics_dir.mkdir(exist_ok=True)
+            plot_roc_curve(fpr, tpr, roc_auc, metrics_dir.joinpath(f"epoch{self.current_epoch:02d}_{split}_roc.png"))
+
             self.per_class_acc[i].reset()
-            self.per_class_auc[i].reset()
+            self.preds[i] = []
+            self.targets[i] = []
 
     def predict_step(self, batch):
         pred = self(batch)
-        return pred, batch[-1]
+        return pred, batch[1]
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(
