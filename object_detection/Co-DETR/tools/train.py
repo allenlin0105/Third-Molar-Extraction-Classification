@@ -22,8 +22,6 @@ from mmdet.utils import (collect_env, get_device, get_root_logger,
                          update_data_root)
 from projects import *
 
-torch.cuda.set_per_process_memory_fraction(0.5, 0)
-
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
     parser.add_argument('config', help='train config file path')
