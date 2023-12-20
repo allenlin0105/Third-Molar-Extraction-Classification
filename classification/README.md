@@ -6,12 +6,22 @@ To run the classification, `data/odontoai-classification` dataset should be crea
 You can refer to the README at the root folder and see how to set up this dataset.
 
 
-## How to train with sample model
+## How to run
+1. Train
 ```
-cd classification/
+python3 main.py --do_train \
+    --model resnet \
+    --contrast 2.5
+```
+2. Test
+```
+python3 main.py --do_test --test_version 0 \
+    --model resnet \
+    --dataset_folder ../data/odontoai-cropped/ \
+    --contrast 2.5
+```
+Output will be saved in `lightning_logs/version_0/output/`
 
-python3 main.py --do_train
-```
 
 ## How to train your custom model
 1. Declare your model at `models/` folder
