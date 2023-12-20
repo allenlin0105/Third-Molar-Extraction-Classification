@@ -3,7 +3,7 @@ DEVICE=0
 cd object_detection/Co-DETR
 source .venv/bin/activate
 gdown --fuzzy https://drive.google.com/file/d/1XfVSeKAxpAq9sgxlnw5buX5KWS_jDXSw/view?usp=sharing
-python3 output.py --save_bbox
+python3 output.py --split test --save_bbox
 deactivate
 
 cd ../../
@@ -14,8 +14,7 @@ python3 data_preprocess/cropper.py \
     --target_image_folder data/odontoai-cropped/test/images
 
 cd classification
-python3 main.py --do_test --test_version 82 \
-    --cuda 6 \
+python3 main.py --do_test --test_version 0 \
     --model resnet \
     --dataset_folder ../data/odontoai-cropped/ \
     --contrast 2.5
